@@ -1,24 +1,41 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+// Vue Router: ページ遷移を管理するライブラリのインポート
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
 
+// TypeScript: ルート設定の型定義
 const routes: RouteRecordRaw[] = [
-    {
-        path: '/', // ルートパス：ホームページ
-        name: 'Home', // ルート名
-        component: () => import("../layout/MainLayout.vue"), 
-    }
-    // 他のルートをここに追加できます
+  {
+    path: "/",                                           // ルートパス: ホームページのURL
+    name: "home",                                        // ルート名: プログラムでナビゲーション時に使用
+    component: () => import("../layout/MainLayout.vue"), // 遅延読み込み: 必要時にコンポーネントを読み込み
+  },
+  {
+    path: "/orders2",                                    // 注文ページのパス
+    component: () => import("../layout/MainLayout.vue"), // 親レイアウト: 共通のヘッダー・フッターを表示
+    children: [                                          // 子ルート: 親レイアウト内に表示されるページ
+      {
+        path: "",                                        // 空パス: /orders2 にアクセス時に表示される子コンポーネント
+        name: "orders2",                                 // ルート名: プログラムでナビゲーション時に使用
+        component: () => import("../pages/Orders2Page.vue"), // 実際の注文ページコンポーネント
+      },
+    ],
+  },
+  {
+    path: "/upload5",                                    // アップロードページのパス
+    component: () => import("../layout/MainLayout.vue"), // 同じレイアウトを使用
+    children: [
+      {
+        path: "",                                        // /upload5 アクセス時の子コンポーネント
+        name: "upload5",
+        component: () => import("../pages/SapUploadPage.vue"), // SAPアップロード機能のページ
+      },
+    ],
+  },
 ];
 
+// ルーター作成: 上記のルート設定でルーターインスタンスを作成
 const router = createRouter({
-    history: createWebHistory(), // HTML5の履歴モードを使用
-    routes, // ルート定義を設定
+  history: createWebHashHistory(), // ハッシュモード: URL に # が付く (例: domain.com/#/orders2)
+  routes, // ルート設定を適用
 });
 
-// 認証ガードの例（必要に応じて有効化）
-// router.beforeEach((to, from, next) => {
-//     const isAuthenticated = false; // ここで認証状態を確認
-//     if (to.name !== 'Login' && !isAuthenticated) next({ name: 'Login' });
-//     else next();
-// });
-
-export default router; // ルーターをエクスポート
+export default router; // 他のファイルで使用できるようにエクスポート
