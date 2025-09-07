@@ -129,8 +129,8 @@ const onProfileClick = (event) => {
 };
 // ナビゲーションアイテム
 const navItems = [
-  { path: "/plan3", label: "テーブル案３", icon: "menu" },
-  { path: "/orders2", label: "案５単票入力画面", icon: "my-sales-order" },
+  { path: "/plan3", label: "AgGridテーブル", icon: "table-chart" },
+  { path: "/orders2", label: "注文情報試作", icon: "my-sales-order" },
 ];
 // サイドバーの表示・非表示を切り替える関数
 const toggleSidebar = () => {

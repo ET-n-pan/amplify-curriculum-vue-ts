@@ -20,13 +20,13 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/upload5",                                    // アップロードページのパス
+    path: "/plan3",                                    // アップロードページのパス
     component: () => import("../layout/MainLayout.vue"), // 同じレイアウトを使用
     children: [
       {
-        path: "",                                        // /upload5 アクセス時の子コンポーネント
-        name: "upload5",
-        component: () => import("../pages/SapUploadPage.vue"), // SAPアップロード機能のページ
+        path: "",                                        // plan3 アクセス時の子コンポーネント
+        name: "",
+        component: () => import("../pages/AgGridPage.vue"), // AgGridPage コンポーネントを表示
       },
     ],
   },

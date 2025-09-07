@@ -108,8 +108,8 @@ const showToast = (msg) => {
 
 // 注文追加関数
 const addOrder = () => {
-	const errorMessage = formStore.addOrder();
-	if (errorMessage) {
+	const {success, errorMessage} = formStore.addOrder();
+	if (!success){
 		showToast(errorMessage);
 	}else{
 		showToast("注文が追加されました。");

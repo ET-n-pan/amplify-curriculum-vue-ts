@@ -1,12 +1,26 @@
 // stores/form-store.ts
 import { defineStore } from "pinia";
 
+
+// 商品ごとの単価を定義
+const productPrices = {
+	PROD001: 1000,
+	PROD002: 2000,
+	PROD003: 3000,
+};
+
+// 商品コードに基づいて単価を設定
+function updateUnitPrice(productCode) {
+	return productPrices[productCode] || 0;
+}
+
 export const useFormStore = defineStore("form", {
 	state: () => ({
 		// フォームデータ初期化
 		customerCode: "15112009",
 		productCode: "PROD001",
 		quantity: "1",
+		unitPrice: updateUnitPrice("PROD001").toString(),
 		deliveryDate: new Date().toISOString().split('T')[0],
 
 		// 注文リストをlocalStorageから取得
@@ -21,8 +35,8 @@ export const useFormStore = defineStore("form", {
 		// フォームリセット
 		reset() {
 		this.customerCode = "15112009";
-		this.productCode = "PROD001";
 		this.quantity = "1";
+		this.unitPrice = updateUnitPrice(this.productCode).toString();
 		this.deliveryDate = new Date().toISOString().split('T')[0];
 	},
     
@@ -58,6 +72,14 @@ export const useFormStore = defineStore("form", {
 		}
 	},
 
+	updateOrder(orderId, updatedData) {
+		const orderIndex = this.orders.findIndex(o => o.id === orderId);
+		if (orderIndex !== -1) {
+			this.orders[orderIndex] = { ...this.orders[orderIndex], ...updatedData };
+			localStorage.setItem('orders', JSON.stringify(this.orders));
+		}
+	},
+
     // 注文追加
     addOrder() {
 		const validationErrors = this.validateForm();
@@ -65,7 +87,7 @@ export const useFormStore = defineStore("form", {
 		if (validationErrors.length > 0) {
 			// エラーメッセージ表示
 			const errorMessage = validationErrors.join('\n');
-			return errorMessage;
+			return { success: false, message: errorMessage };
 		}
 		
 		// 新しい注文オブジェクトを作成
@@ -74,6 +96,8 @@ export const useFormStore = defineStore("form", {
 			customerCode: this.customerCode,
 			productCode: this.productCode,
 			quantity: this.quantity,
+			unitPrice: updateUnitPrice(this.productCode),
+			estimatedCost: (parseInt(this.quantity) * parseInt(updateUnitPrice(this.productCode))),
 			deliveryDate: this.deliveryDate,
 			status: "新規",
 			createdAt: new Date().toLocaleString(),
@@ -85,7 +109,7 @@ export const useFormStore = defineStore("form", {
 		
 		// フォームをリセット
 		this.reset();
-		return true;
+		return { success: true, message: "注文が追加されました。"};
     },
     
 	// 全注文クリア
