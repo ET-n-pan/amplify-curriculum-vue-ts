@@ -1,9 +1,8 @@
 <template>
   <authenticator>
     <template v-slot="{ user, signOut }">
-        <!-- <template v-if="user">
-            <UserContent :clientId="$clientId" :user="user" />
-        </template> -->
+        <!-- ユーザーデータをセット -->
+        {{ setUserData(user) }}
 
         <!-- UI5のナビゲーションレイアウトを追加 -->
         <ui5-navigation-layout ref="layoutRef">
@@ -42,9 +41,9 @@
             <!-- ユーザーアカウント情報 -->
             <ui5-user-menu-account
                 slot="accounts"
-                :avatar-src="defaultAvatar"
-                :title-text="user.username"
-                subtitle-text="test@email.com"
+                :avatar-src="globalStore.avatar || defaultAvatar"
+                :title-text="globalStore.username || 'User Name'"
+                :subtitle-text="globalStore.email || 'Email Address'"
                 description="Delivery Manager, SAP SE"
                 selected
             ></ui5-user-menu-account>
@@ -83,11 +82,13 @@ import { Authenticator } from "@aws-amplify/ui-vue";
 import { I18n } from "aws-amplify/utils";
 import {translations} from "@aws-amplify/ui";
 import '@aws-amplify/ui-vue/styles.css';
-import { ref } from "vue";
+import { ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import { setTheme } from "@ui5/webcomponents-base/dist/config/Theme.js";
 import NavigationLayoutMode from "@ui5/webcomponents-fiori/dist/types/NavigationLayoutMode.js";
+import { useGlobalStore } from "../stores/global-store";
 
+const globalStore = useGlobalStore();
 const layoutRef = ref(null);
 const userMenuRef = ref(null);
 const currentTheme = ref("sap_horizon");
@@ -109,6 +110,14 @@ const themes = {
   sap_fiori_3_hcb: "Belize Dark",
 };
 
+const instance = getCurrentInstance();
+const clientId = instance?.appContext.config.globalProperties.$clientId;
+const setUserData = async (user) => {
+  if (user) {
+    await globalStore.setUser(user, clientId);
+  }
+};
+
 // プロフィールクリックイベントハンドラ
 const onProfileClick = (event) => {
     const target = event.detail.targetRef;
@@ -122,7 +131,6 @@ const onProfileClick = (event) => {
 const navItems = [
   { path: "/plan3", label: "テーブル案３", icon: "menu" },
   { path: "/orders2", label: "案５単票入力画面", icon: "my-sales-order" },
-  { path: "/upload5", label: "案５アップロード", icon: "upload-to-cloud" },
 ];
 // サイドバーの表示・非表示を切り替える関数
 const toggleSidebar = () => {
