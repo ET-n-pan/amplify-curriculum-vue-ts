@@ -13,6 +13,7 @@
     "@aws-amplify/ui-vue": "^4.3.3",
     "@ui5/webcomponents": "^2.14.0",
     "@ui5/webcomponents-fiori": "^2.14.0",
+    "@ui5/webcomponents-theming": "^2.14.0",
     "aws-amplify": "^6.15.5",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",

@@ -21,14 +21,4 @@ import "@ui5/webcomponents-fiori/dist/UserMenuItem.js";
 import "@ui5/webcomponents-fiori/dist/SideNavigation.js";
 import "@ui5/webcomponents-fiori/dist/NavigationLayout.js";
 
-import "@ui5/webcomponents-icons/dist/menu2.js";
-import "@ui5/webcomponents-icons/dist/nav-back.js";
-import "@ui5/webcomponents-icons/dist/sys-help.js";
-import "@ui5/webcomponents-icons/dist/customer.js";
-import "@ui5/webcomponents-icons/dist/da.js";
-import "@ui5/webcomponents-icons/dist/action-settings.js";
-import "@ui5/webcomponents-icons/dist/globe.js";
-import "@ui5/webcomponents-icons/dist/collaborate.js";
-import "@ui5/webcomponents-icons/dist/official-service.js";
-import "@ui5/webcomponents-icons/dist/private.js";
-import "@ui5/webcomponents-icons/dist/accelerated.js";
+import "@ui5/webcomponents-icons/dist/AllIcons.js";

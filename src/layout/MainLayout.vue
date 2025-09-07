@@ -12,7 +12,7 @@
             <ui5-shellbar notifications-count="5" show-notifications @ui5-profile-click="onProfileClick">
                 
                 <!-- メニューボタン -->
-                <ui5-button icon="menu2" slot="startButton"></ui5-button>
+                <ui5-button icon="menu2" slot="startButton" @click="toggleSidebar"></ui5-button>
                 
                 <!-- 戻るボタン -->
                 <ui5-button icon="nav-back" slot="startButton" ></ui5-button>
@@ -51,7 +51,22 @@
             <!-- ユーザーメニューアイテム -->
             <ui5-user-menu-item icon="person-placeholder" text="Profile" data-id="setting" @click="profile"></ui5-user-menu-item>
             <ui5-user-menu-item icon="action-settings" text="Setting" data-id="setting"></ui5-user-menu-item>
+            <ui5-user-menu-item icon="palette" text="テーマ">
+            <ui5-menu-item
+              v-for="(themeLabel, themeKey) in themes"
+              :key="themeKey"
+              :text="themeLabel"
+              :icon="themeKey === currentTheme ? 'accept' : ''"
+              icon-color="Positive"
+              @click="changeTheme(themeKey)"
+            />
+            </ui5-user-menu-item>
         </ui5-user-menu>
+
+        <ui5-side-navigation slot="sideContent" @selection-change="changeMenu">
+            <ui5-side-navigation-item v-for="item in navItems" :key="item.path" :text="item.label" :icon="item.icon" :data-route="item.path" />
+        </ui5-side-navigation>
+
 
         <main style="padding: 20px;">
             <router-view />
@@ -70,7 +85,8 @@ import {translations} from "@aws-amplify/ui";
 import '@aws-amplify/ui-vue/styles.css';
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-
+import { setTheme } from "@ui5/webcomponents-base/dist/config/Theme.js";
+import NavigationLayoutMode from "@ui5/webcomponents-fiori/dist/types/NavigationLayoutMode.js";
 
 const layoutRef = ref(null);
 const userMenuRef = ref(null);
@@ -84,6 +100,14 @@ I18n.putVocabularies(translations);
 I18n.setLanguage("ja");
 // デフォルトアバター画像URL
 const defaultAvatar = "https://ui5.sap.com/resources/sap/m/themes/base/img/Person.png";
+const themes = {
+  sap_horizon: "Horizon",
+  sap_horizon_dark: "Horizon Dark",
+  sap_fiori_3: "Quartz",
+  sap_fiori_3_dark: "Quartz Dark",
+  sap_fiori_3_hcw: "Belize",
+  sap_fiori_3_hcb: "Belize Dark",
+};
 
 // プロフィールクリックイベントハンドラ
 const onProfileClick = (event) => {
@@ -93,6 +117,32 @@ const onProfileClick = (event) => {
         userMenuRef.value.opener = target;
         userMenuRef.value.open = true;
     }
+};
+// ナビゲーションアイテム
+const navItems = [
+  { path: "/plan3", label: "テーブル案３", icon: "menu" },
+  { path: "/orders2", label: "案５単票入力画面", icon: "my-sales-order" },
+  { path: "/upload5", label: "案５アップロード", icon: "upload-to-cloud" },
+];
+// サイドバーの表示・非表示を切り替える関数
+const toggleSidebar = () => {
+  if (layoutRef.value) {
+    layoutRef.value.mode = layoutRef.value.isSideCollapsed() ? NavigationLayoutMode.Expanded : NavigationLayoutMode.Collapsed;
+  }
+};
+// メニュー選択変更イベントハンドラ
+const changeMenu = (event) => {
+  const selectedItem = event.detail.item;
+  const route = selectedItem.getAttribute("data-route");
+  if (route) {
+    router.push(route);
+  }
+};
+
+// テーマ変更関数
+const changeTheme = (themeKey) => {
+  setTheme(themeKey);
+  currentTheme.value = themeKey;
 };
 
 // プロフィールページへ遷移する関数
