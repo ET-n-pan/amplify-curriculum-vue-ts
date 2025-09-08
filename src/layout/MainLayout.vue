@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import "../lib/UI5FormComp.js";
+import "@/lib/UI5FormComp.js";
 import { Authenticator } from "@aws-amplify/ui-vue";
 import { I18n } from "aws-amplify/utils";
 import {translations} from "@aws-amplify/ui";
@@ -86,7 +86,7 @@ import { ref, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import { setTheme } from "@ui5/webcomponents-base/dist/config/Theme.js";
 import NavigationLayoutMode from "@ui5/webcomponents-fiori/dist/types/NavigationLayoutMode.js";
-import { useGlobalStore } from "../stores/global-store";
+import { useGlobalStore } from "@/stores/global-store";
 
 const globalStore = useGlobalStore();
 const layoutRef = ref(null);

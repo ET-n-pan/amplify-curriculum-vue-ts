@@ -18,7 +18,7 @@ import { ref } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { themeAlpine, AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import "@ui5/webcomponents/dist/Title.js";
-import { useFormStore } from "../../stores/form-store";
+import { useFormStore } from "@/stores/form-store";
 
 // コミュニティ版のモジュール登録
 ModuleRegistry.registerModules([AllCommunityModule]);
