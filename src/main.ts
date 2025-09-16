@@ -1,18 +1,21 @@
+import { Amplify } from "aws-amplify";
+import { parseAmplifyConfig } from "aws-amplify/utils";
 import { createApp } from 'vue'
 import './style.scss'
 import App from './App.vue'
 import router from "./router/index.ts"; 
 import { createPinia } from "pinia";
-import { Amplify } from "aws-amplify";
-import { parseAmplifyConfig } from "aws-amplify/utils";
+
+
 import outputs from "../amplify_outputs.json";
 
 // Amplify設定: AWSサービスとの接続情報を設定
 const amplifyConfig = parseAmplifyConfig(outputs);
-Amplify.configure({
-  Auth: amplifyConfig.Auth, // Cognito認証設定のみ適用
-  Storage: amplifyConfig.Storage, // S3ストレージ設定を追加
-});
+// Amplify.configure({
+//   Auth: amplifyConfig.Auth, // Cognito認証設定のみ適用
+//   Storage: amplifyConfig.Storage, // S3ストレージ設定を追加
+// });
+Amplify.configure(outputs); // 全ての設定を適用
 
 // Vueアプリケーション作成
 const app = createApp(App);

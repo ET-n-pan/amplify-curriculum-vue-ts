@@ -70,8 +70,8 @@
   	</div>
 </template>
 
-<script setup>
-import { useFormStore } from "../stores/form-store";
+<script setup lang="ts">
+import { useFormStore } from "@/stores/form-store";
 import "@ui5/webcomponents/dist/Panel.js";
 import "@ui5/webcomponents/dist/Form.js";
 import "@ui5/webcomponents/dist/FormGroup.js";
@@ -92,14 +92,64 @@ import "@ui5/webcomponents/dist/ComboBox.js";
 import "@ui5/webcomponents/dist/ComboBoxItem.js";
 import "@ui5/webcomponents/dist/DatePicker.js";
 import "@ui5/webcomponents/dist/TextArea.js";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import type { Schema } from "@/amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+import { ODataQueryBuilder } from "@/utils/ODataQueryBuilder";
 
-const messageRef = ref(null);
-const selectionRef = ref(null);
+
+const messageRef = ref<any>(null);
+const selectionRef = ref<any>(null);
 const formStore = useFormStore();
 
+const client = generateClient<Schema>() // use this Data client for CRUDL requests
+const orders = ref<Array<Schema['Order']["type"]>>([]);
+
+// 1. 見積もり金額が1000以上、3000以下の注文を取得し、金額の昇順で上位5件を取得
+const getMidValueOrders = async () => {
+   const result = await client.queries.getOrder({
+       filter: ODataQueryBuilder.filter.and(
+          ODataQueryBuilder.filter.ge('estimated_cost', 1000),
+          ODataQueryBuilder.filter.le('estimated_cost', 3000)
+       ),
+       orderby: ODataQueryBuilder.orderBy.asc('estimated_cost'),
+       top: 5
+    });
+   console.log("Mid value orders:", result.data);
+   return result.data;
+};
+
+// 2. 顧客コードが'15112009'の注文を取得し、注文ID、顧客コード、数量、作成日のみ表示
+const getCustomerOrders = async (customerId: string) => {
+   const result = await client.queries.getOrder({  
+       filter: ODataQueryBuilder.filter.eq('customer_code', customerId),
+       select: ODataQueryBuilder.select.fields('ID', 'customer_code', 'quantity', 'created_at')
+    });
+   console.log("Customer orders:", result.data);
+   return result.data;
+};
+
+// 3. 作成日が2025年9月11日以降の注文を取得し、作成日の降順で上位3件を取得
+const getRecentOrders = async () => {
+   const result = await client.queries.getOrder({
+         filter: ODataQueryBuilder.filter.ge('created_at', '2025-09-12T00:00:00Z'),
+         orderby: ODataQueryBuilder.orderBy.desc('created_at'),
+         top: 3
+    });
+   console.log("Recent orders:", result.data);
+   return result.data;
+};
+
+onMounted(async () => {
+  const result = await getMidValueOrders();
+  const customerOrders = await getCustomerOrders('15112009');
+
+  const recentOrders = await getRecentOrders();
+
+});
+
 // トースト表示関数
-const showToast = (msg) => {
+const showToast = (msg: string) => {
 	if (messageRef.value) {
 		messageRef.value.innerText = msg;
 		messageRef.value.open = true;
@@ -108,12 +158,8 @@ const showToast = (msg) => {
 
 // 注文追加関数
 const addOrder = () => {
-	const {success, errorMessage} = formStore.addOrder();
-	if (!success){
-		showToast(errorMessage);
-	}else{
-		showToast("注文が追加されました。");
-	}
+	const {success, message} = formStore.addOrder();
+	showToast(message);
 }
 
 // 注文削除関数

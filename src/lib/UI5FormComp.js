@@ -8,8 +8,9 @@ import "@ui5/webcomponents/dist/Label.js";
 import "@ui5/webcomponents/dist/ToggleButton.js";
 import "@ui5/webcomponents/dist/Menu.js";
 import "@ui5/webcomponents/dist/MenuItem.js";
+import '@ui5/webcomponents/dist/Assets';
 
-
+import '@ui5/webcomponents-fiori/dist/Assets';
 import "@ui5/webcomponents-fiori/dist/ShellBar.js";
 import "@ui5/webcomponents-fiori/dist/ShellBarItem.js";
 import "@ui5/webcomponents-fiori/dist/ShellBarSpacer.js";

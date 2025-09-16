@@ -77,3 +77,6 @@ aws-exports.js
 
 # Yarn Integrity file
 .yarn-integrity
+
+# amplify
+amplify_outputs*

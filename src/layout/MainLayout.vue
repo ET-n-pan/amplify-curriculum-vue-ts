@@ -24,9 +24,6 @@
                 <!-- トライアルタグ -->
                 <ui5-tag color-scheme="7" slot="content" design="Information">Trial</ui5-tag>
                 
-                <!-- スペーサー -->
-                <ui5-shellbar-spacer slot="content"></ui5-shellbar-spacer>
-                
                 <!-- 検索フィールド -->
                 <ui5-input placeholder="Instructions" slot="searchField"></ui5-input>
                 
@@ -36,40 +33,40 @@
                 </ui5-avatar>
             </ui5-shellbar>
         
-        <!-- ユーザーメニュー、サインアウトイベント -->
-        <ui5-user-menu ref="userMenuRef" @sign-out-click="signOut">
-            <!-- ユーザーアカウント情報 -->
-            <ui5-user-menu-account
-                slot="accounts"
-                :avatar-src="globalStore.avatar || defaultAvatar"
-                :title-text="globalStore.username || 'User Name'"
-                :subtitle-text="globalStore.email || 'Email Address'"
-                description="Delivery Manager, SAP SE"
-                selected
-            ></ui5-user-menu-account>
-            <!-- ユーザーメニューアイテム -->
-            <ui5-user-menu-item icon="person-placeholder" text="Profile" data-id="setting" @click="profile"></ui5-user-menu-item>
-            <ui5-user-menu-item icon="action-settings" text="Setting" data-id="setting"></ui5-user-menu-item>
-            <ui5-user-menu-item icon="palette" text="テーマ">
-            <ui5-menu-item
-              v-for="(themeLabel, themeKey) in themes"
-              :key="themeKey"
-              :text="themeLabel"
-              :icon="themeKey === currentTheme ? 'accept' : ''"
-              icon-color="Positive"
-              @click="changeTheme(themeKey)"
-            />
-            </ui5-user-menu-item>
-        </ui5-user-menu>
+          <!-- ユーザーメニュー、サインアウトイベント -->
+          <ui5-user-menu ref="userMenuRef" @sign-out-click="signOut">
+              <!-- ユーザーアカウント情報 -->
+              <ui5-user-menu-account
+                  slot="accounts"
+                  :avatar-src="globalStore.avatar || defaultAvatar"
+                  :title-text="globalStore.username || 'User Name'"
+                  :subtitle-text="globalStore.email || 'Email Address'"
+                  description="Delivery Manager, SAP SE"
+                  selected
+              ></ui5-user-menu-account>
+              <!-- ユーザーメニューアイテム -->
+              <ui5-user-menu-item icon="person-placeholder" text="Profile" data-id="setting" @click="profile"></ui5-user-menu-item>
+              <ui5-user-menu-item icon="action-settings" text="Setting" data-id="setting"></ui5-user-menu-item>
+              <ui5-user-menu-item icon="palette" text="テーマ">
+              <ui5-menu-item
+                v-for="(themeLabel, themeKey) in themes"
+                :key="themeKey"
+                :text="themeLabel"
+                :icon="themeKey === currentTheme ? 'accept' : ''"
+                icon-color="Positive"
+                @click="changeTheme(themeKey)"
+              />
+              </ui5-user-menu-item>
+          </ui5-user-menu>
 
-        <ui5-side-navigation slot="sideContent" @selection-change="changeMenu">
-            <ui5-side-navigation-item v-for="item in navItems" :key="item.path" :text="item.label" :icon="item.icon" :data-route="item.path" />
-        </ui5-side-navigation>
+          <ui5-side-navigation slot="sideContent" @selection-change="changeMenu">
+              <ui5-side-navigation-item v-for="item in navItems" :key="item.path" :text="item.label" :icon="item.icon" :data-route="item.path" />
+          </ui5-side-navigation>
 
 
-        <main style="padding: 20px;">
-            <router-view />
-        </main>
+          <main style="padding: 20px;">
+              <router-view />
+          </main>
         </ui5-navigation-layout>
         
     </template>
@@ -87,6 +84,7 @@ import { useRouter } from "vue-router";
 import { setTheme } from "@ui5/webcomponents-base/dist/config/Theme.js";
 import NavigationLayoutMode from "@ui5/webcomponents-fiori/dist/types/NavigationLayoutMode.js";
 import { useGlobalStore } from "@/stores/global-store";
+import { set } from "@vueuse/core";
 
 const globalStore = useGlobalStore();
 const layoutRef = ref(null);
@@ -94,6 +92,7 @@ const userMenuRef = ref(null);
 const currentTheme = ref("sap_horizon");
 const router = useRouter();
 
+setTheme('sap_horizon');
 
 // 多言語対応設定
 I18n.putVocabularies(translations);
@@ -129,8 +128,8 @@ const onProfileClick = (event) => {
 };
 // ナビゲーションアイテム
 const navItems = [
-  { path: "/plan3", label: "AgGridテーブル", icon: "table-chart" },
-  { path: "/orders2", label: "注文情報試作", icon: "my-sales-order" },
+  { path: "/aggrid", label: "AgGridテーブル", icon: "table-chart" },
+  { path: "/ui5-table", label: "注文情報試作", icon: "my-sales-order" },
 ];
 // サイドバーの表示・非表示を切り替える関数
 const toggleSidebar = () => {
@@ -149,7 +148,7 @@ const changeMenu = (event) => {
 
 // テーマ変更関数
 const changeTheme = (themeKey) => {
-  setTheme(themeKey);
+  setTheme(themeKey.toString());
   currentTheme.value = themeKey;
 };
 

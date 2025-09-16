@@ -11,6 +11,7 @@
   "dependencies": {
     "@aws-amplify/ui-react": "^6.12.0",
     "@aws-amplify/ui-vue": "^4.3.3",
+    "@aws-appsync/utils": "^2.0.3",
     "@ui5/webcomponents": "^2.14.0",
     "@ui5/webcomponents-fiori": "^2.14.0",
     "@ui5/webcomponents-theming": "^2.14.0",

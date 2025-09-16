@@ -7,11 +7,38 @@ specifies that any unauthenticated user can "create", "read", "update",
 and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
-  Todo: a
-    .model({
-      content: a.string(),
-    })
-    .authorization((allow) => [allow.guest()]),
+  Order: a.customType({
+      ID: a.string(),
+      customer_code: a.string(),
+      product_code: a.string(),
+      estimated_cost: a.float(),
+      quantity: a.integer(),
+      unit_price: a.float(),
+      delivery_date: a.string(),
+      status: a.string(),
+      created_at: a.string()
+    }),
+
+    // 
+    getOrder: a
+      .query()
+      .arguments({
+        orderby: a.string(),
+        filter: a.string(),
+        top: a.integer(),
+        skip: a.integer(),
+        select: a.string(),
+        search: a.string(),
+      })
+      .returns(a.ref("Order").array())
+      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .handler(
+        a.handler.custom({
+          dataSource: "OdataDataSource",
+          entry:"./getOrder.js"
+        })
+      ),
+    
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -19,7 +46,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'identityPool',
+    defaultAuthorizationMode: 'apiKey',
   },
 });
 

@@ -13,12 +13,23 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { themeAlpine, AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import "@ui5/webcomponents/dist/Title.js";
 import { useFormStore } from "@/stores/form-store";
+
+import type { Schema } from "@/amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>() // use this Data client for CRUDL requests
+const orders = ref<Array<Schema['Order']["type"]>>([]);
+
+onMounted(async () => {
+  const result = await client.queries.getOrder();
+  console.log("result:", result);
+});
 
 // コミュニティ版のモジュール登録
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -39,7 +50,7 @@ const defaultColDef = {
 };
 
 // 通貨文字列を数値に変換する関数
-const parseCurrency = (val) => {
+const parseCurrency = (val: any) => {
   if (typeof val === "string") {
     return parseFloat(val.replace(/[¥,]/g, "")) || 0;
   }
@@ -47,13 +58,13 @@ const parseCurrency = (val) => {
 };
 
 // 数値を通貨形式の文字列に変換する関数
-const formatCurrency = (val) => {
+const formatCurrency = (val: any) => {
   const num = parseFloat(val);
   if (isNaN(num)) return "";
   return `¥${num.toLocaleString()}`;
 };
 
-const recalculateEstimateCost = (params) => {
+const recalculateEstimateCost = (params: any) => {
   const data = params.data;
   const quantity = parseCurrency(data.quantity);
   const unitPrice = parseCurrency(data.unitPrice);
@@ -95,8 +106,8 @@ const columnDefs = ref([
     flex: 1,
     editable:true,
     type: 'numericColumn',
-    valueFormatter: (params) => formatCurrency(params.value),
-    valueParser: (params) => parseCurrency(params.newValue),
+    valueFormatter: (params: any) => formatCurrency(params.value),
+    valueParser: (params: any) => parseCurrency(params.newValue),
     onCellValueChanged: recalculateEstimateCost,
   },
   {
@@ -104,8 +115,8 @@ const columnDefs = ref([
     field: "estimatedCost",
     flex: 1,
     type: 'numericColumn',
-    valueFormatter: (params) => formatCurrency(params.value),
-    valueParser: (params) => parseCurrency(params.newValue),
+    valueFormatter: (params: any) => formatCurrency(params.value),
+    valueParser: (params: any) => parseCurrency(params.newValue),
     onCellValueChanged: recalculateEstimateCost,
   },
   {

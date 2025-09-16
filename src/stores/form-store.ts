@@ -3,14 +3,14 @@ import { defineStore } from "pinia";
 
 
 // 商品ごとの単価を定義
-const productPrices = {
+const productPrices: { [key: string]: number } = {
 	PROD001: 1000,
 	PROD002: 2000,
 	PROD003: 3000,
 };
 
 // 商品コードに基づいて単価を設定
-function updateUnitPrice(productCode) {
+function updateUnitPrice(productCode : string): number {
 	return productPrices[productCode] || 0;
 }
 
@@ -44,19 +44,19 @@ export const useFormStore = defineStore("form", {
     validateForm() {
 		const errors = [];
 		
-		if (!this.customerCode.trim()) {
+		if (this.customerCode === null || this.customerCode.trim() === "") {
 			errors.push("顧客コードは必須です");
 		}
 		
-		if (!this.productCode) {
+		if (this.productCode === null || (this.productCode in productPrices) === false) {
 			errors.push("商品を選択してください");
 		}
 		
-		if (!this.quantity || parseInt(this.quantity) <= 0) {
+		if (this.quantity === null || parseInt(this.quantity) <= 0) {
 			errors.push("数量は1以上の数値を入力してください");
 		}
 		
-		if (!this.deliveryDate) {
+		if (this.deliveryDate == null || this.deliveryDate.trim() === "") {
 			errors.push("納期は必須です");
 		}
 		
@@ -64,16 +64,16 @@ export const useFormStore = defineStore("form", {
     },
     
 	// 注文数量更新
-	updateOrderQuantity(orderId, newQuantity) {
-		const order = this.orders.find(o => o.id === orderId);
+	updateOrderQuantity(orderId: any, newQuantity: any) {
+		const order = this.orders.find((o: { id: any; }) => o.id === orderId);
 		if (order) {
 			order.quantity = newQuantity;
 			localStorage.setItem('orders', JSON.stringify(this.orders));
 		}
 	},
 
-	updateOrder(orderId, updatedData) {
-		const orderIndex = this.orders.findIndex(o => o.id === orderId);
+	updateOrder(orderId: any, updatedData: any) {
+		const orderIndex = this.orders.findIndex((o: { id: any; }) => o.id === orderId);
 		if (orderIndex !== -1) {
 			this.orders[orderIndex] = { ...this.orders[orderIndex], ...updatedData };
 			localStorage.setItem('orders', JSON.stringify(this.orders));
@@ -97,7 +97,7 @@ export const useFormStore = defineStore("form", {
 			productCode: this.productCode,
 			quantity: this.quantity,
 			unitPrice: updateUnitPrice(this.productCode),
-			estimatedCost: (parseInt(this.quantity) * parseInt(updateUnitPrice(this.productCode))),
+			estimatedCost: (parseInt(this.quantity) * updateUnitPrice(this.productCode)),
 			deliveryDate: this.deliveryDate,
 			status: "新規",
 			createdAt: new Date().toLocaleString(),
@@ -119,9 +119,9 @@ export const useFormStore = defineStore("form", {
     },
 
 	// 選択した注文を削除
-    deleteOrder(selectionElement, messageElement) {
-        if (!selectionElement) {
-			if (messageElement) {
+    deleteOrder(selectionElement: { selected: string; } | null, messageElement: { open: boolean; innerText: string; } | null) {
+        if (selectionElement == null) {
+			if (messageElement != null) {
 				messageElement.open = true;
 				messageElement.innerText = "選択機能が見つかりません。";
 			}
@@ -130,19 +130,20 @@ export const useFormStore = defineStore("form", {
 		const selectedRows = selectionElement.selected.split(' ');
 
 		if (selectedRows.length === 0 || (selectedRows.length === 1 && selectedRows[0] === '')) {
-			if (messageElement) {
+			if (messageElement != null) {
 				messageElement.open = true;
 				messageElement.innerText = "削除する注文を選択してください。";
 			}
 			return;
 		}
-		this.orders = this.orders.filter(order => !selectedRows.includes(order.id));
+		this.orders = this.orders.filter((order: { id: any; }) => !selectedRows.includes(order.id));
 		localStorage.setItem('orders', JSON.stringify(this.orders));
 		selectionElement.selected = '';
-		if (messageElement) {
+		if (messageElement != null) {
 			messageElement.open = true;
 			messageElement.innerText = `${selectedRows.length}件の注文を削除しました。`;
 		}
+		return;
     }
   }
 });
