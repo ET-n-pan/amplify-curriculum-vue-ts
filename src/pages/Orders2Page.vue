@@ -7,12 +7,12 @@
 		<ui5-form>
 			<ui5-form-item>
 				<ui5-label slot="labelContent" required>顧客コード:</ui5-label>
-				<ui5-input v-model="formStore.customerCode"></ui5-input>
+				<ui5-input v-model="formStore.customer_code"></ui5-input>
 			</ui5-form-item>
 
 			<ui5-form-item>
 				<ui5-label slot="labelContent" required>商品:</ui5-label>
-				<ui5-select v-model="formStore.productCode">
+				<ui5-select v-model="formStore.product_code">
 					<ui5-option value="">選択してください</ui5-option>
 					<ui5-option value="PROD001">商品A</ui5-option>
 					<ui5-option value="PROD002">商品B</ui5-option>
@@ -22,12 +22,12 @@
 
 			<ui5-form-item>
 				<ui5-label slot="labelContent" required>数量:</ui5-label>
-				<ui5-input v-model="formStore.quantity" type="Number"></ui5-input>
+				<ui5-input v-model="formStore.quantity"></ui5-input>
 			</ui5-form-item>
 
 			<ui5-form-item>
 				<ui5-label slot="labelContent" required>納期:</ui5-label>
-				<ui5-date-picker v-model="formStore.deliveryDate"></ui5-date-picker>
+				<ui5-date-picker v-model="formStore.delivery_date"></ui5-date-picker>
 			</ui5-form-item>
 
 		</ui5-form>
@@ -40,6 +40,7 @@
 		</div>
 		</ui5-panel>
     </div>
+	
     <!-- エラーメッセージ表示用トースト -->
     <ui5-toast id="message" ref="messageRef"></ui5-toast>
 	<!-- オーダー一覧テーブル -->
@@ -57,13 +58,13 @@
         <ui5-illustrated-message slot="noData" name="NoData"></ui5-illustrated-message>
 
 		<!-- オーダー一覧 -->
-		<ui5-table-row v-for="order in formStore.orders" :row-key="order.id" :key="order.id">
-			<ui5-table-cell><ui5-label>{{ order.id }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.customerCode }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.productCode }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-input :value="order.quantity" @input="formStore.updateOrderQuantity(order.id, $event.target.value)"></ui5-input></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.deliveryDate }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.createdAt }}</ui5-label></ui5-table-cell>
+		<ui5-table-row v-for="order in formStore.orders" :row-key="order.ID" :key="order.ID">
+			<ui5-table-cell><ui5-label>{{ order.ID }}</ui5-label></ui5-table-cell>
+			<ui5-table-cell><ui5-label>{{ order.customer_code }}</ui5-label></ui5-table-cell>
+			<ui5-table-cell><ui5-label>{{ order.product_code }}</ui5-label></ui5-table-cell>
+			<ui5-table-cell><ui5-input  :value="String(order.quantity)" @input="formStore.updateOrderQuantity(order.ID, $event.target.value)"></ui5-input></ui5-table-cell>
+			<ui5-table-cell><ui5-label>{{ order.delivery_date }}</ui5-label></ui5-table-cell>
+			<ui5-table-cell><ui5-label>{{ order.created_at }}</ui5-label></ui5-table-cell>
 		</ui5-table-row>
 
     </ui5-table>
@@ -105,6 +106,8 @@ const formStore = useFormStore();
 const client = generateClient<Schema>() // use this Data client for CRUDL requests
 const orders = ref<Array<Schema['Order']["type"]>>([]);
 
+/**
+
 // 1. 見積もり金額が1000以上、3000以下の注文を取得し、金額の昇順で上位5件を取得
 const getMidValueOrders = async () => {
    const result = await client.queries.getOrder({
@@ -139,13 +142,11 @@ const getRecentOrders = async () => {
    console.log("Recent orders:", result.data);
    return result.data;
 };
+ */
+
 
 onMounted(async () => {
-  const result = await getMidValueOrders();
-  const customerOrders = await getCustomerOrders('15112009');
-
-  const recentOrders = await getRecentOrders();
-
+	await fetchOrders();
 });
 
 // トースト表示関数
@@ -157,14 +158,38 @@ const showToast = (msg: string) => {
 }
 
 // 注文追加関数
-const addOrder = () => {
-	const {success, message} = formStore.addOrder();
-	showToast(message);
+async function addOrder() {
+	const {success, message, order} = formStore.addOrder();
+	if (success === true && order !== undefined) {
+		// DBに追加
+		await client.mutations.createOrder(order)
+			.then(() => {
+				showToast("注文が追加されました。");
+				fetchOrders(); // 注文一覧を再取得して更新
+			})
+	} else {
+		showToast(message);
+		return;
+		
+	}
 }
 
 // 注文削除関数
 const deleteOrder = () => {
+	console.log("Deleting orders:", selectionRef.value);
 	formStore.deleteOrder(selectionRef.value, messageRef.value);
 }
+
+const fetchOrders = async () => {
+	try {
+		const result = await client.queries.getOrder();
+		if (result.data) {
+			formStore.setOrders(result.data);
+		}
+	} catch (error) {
+		console.error("Error fetching orders:", error);
+		showToast("注文の取得中にエラーが発生しました。");
+	}
+};
 
 </script>

@@ -34,6 +34,8 @@ export function request(ctx) {
     queryParams["$search"] = args.search;
   }
   
+  queryParams["$count"] = true;
+
   console.log("Query params:", JSON.stringify(queryParams, null, 2));
   return {
     method: "GET",

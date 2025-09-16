@@ -8,7 +8,7 @@
       :rowData="formStore.orders"
       :defaultColDef="defaultColDef"
       :theme="theme"
-      style="height: 240px"
+      style="height: 66vh"
     ></ag-grid-vue>
   </div>
 </template>
@@ -67,29 +67,29 @@ const formatCurrency = (val: any) => {
 const recalculateEstimateCost = (params: any) => {
   const data = params.data;
   const quantity = parseCurrency(data.quantity);
-  const unitPrice = parseCurrency(data.unitPrice);
-  data.estimatedCost = quantity * unitPrice;
+  const unitPrice = parseCurrency(data.unit_price);
+  data.estimated_cost = quantity * unitPrice;
 
   // テーブルとストアの両方を更新
   params.api.applyTransaction({ update: [data] });
-  formStore.updateOrder(data.id, data);
+  formStore.updateOrder(data.ID, data);
 };
 
 const columnDefs = ref([
   {
     headerName: "注文ID",
-    field: "id",
+    field: "ID",
     flex: 1,
     minWidth: 120
   },
   {
     headerName: "顧客コード",
-    field: "customerCode",
+    field: "customer_code",
     flex: 1,
   },
   {
     headerName: "商品コード",
-    field: "productCode",
+    field: "product_code",
     flex: 1,
   },
   {
@@ -102,7 +102,7 @@ const columnDefs = ref([
   },
   {
     headerName: "単価",
-    field: "unitPrice",
+    field: "unit_price",
     flex: 1,
     editable:true,
     type: 'numericColumn',
@@ -112,7 +112,7 @@ const columnDefs = ref([
   },
   {
     headerName: "見積り",
-    field: "estimatedCost",
+    field: "estimated_cost",
     flex: 1,
     type: 'numericColumn',
     valueFormatter: (params: any) => formatCurrency(params.value),
@@ -121,12 +121,12 @@ const columnDefs = ref([
   },
   {
     headerName: "納期",
-    field: "deliveryDate",
+    field: "delivery_date",
     flex: 1,
   },
   {
     headerName: "作成日時",
-    field: "createdAt",
+    field: "created_at",
     flex: 1,
   }
 ]);

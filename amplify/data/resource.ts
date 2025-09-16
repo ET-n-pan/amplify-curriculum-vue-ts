@@ -1,4 +1,4 @@
-import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { type ClientSchema, a, defineData, secret } from '@aws-amplify/backend';
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -38,6 +38,66 @@ const schema = a.schema({
           entry:"./getOrder.js"
         })
       ),
+
+    createOrder: a
+      .mutation()
+      .arguments({
+        ID: a.string(),
+        customer_code: a.string(),
+        product_code: a.string(),
+        estimated_cost: a.float(),
+        quantity: a.integer(),
+        unit_price: a.float(),
+        delivery_date: a.string(),
+        status: a.string(),
+        created_at: a.string()
+      })
+      .returns(a.ref("Order"))
+      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .handler(
+        a.handler.custom({
+          dataSource: "OdataDataSource",
+          entry:"./createOrder.js"
+        })
+      ),
+
+    updateOrder: a
+      .mutation()
+      .arguments({
+        ID: a.string().required(),
+        customer_code: a.string(),
+        product_code: a.string(),
+        estimated_cost: a.float(),
+        quantity: a.integer(),
+        unit_price: a.float(),
+        delivery_date: a.string(),
+        status: a.string(),
+        created_at: a.string()
+      })
+      .returns(a.ref("Order"))
+      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .handler(
+        a.handler.custom({
+          dataSource: "OdataDataSource",
+          entry:"./updateOrder.js"
+        })
+      ),
+      
+    deleteOrder: a
+      .mutation()
+      .arguments({
+        ID: a.string().required(),
+      })
+      .returns(a.boolean())
+      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .handler(
+        a.handler.custom({
+          dataSource: "OdataDataSource",
+          entry:"./deleteOrder.js"
+        })
+      ),
+      
+
     
 });
 
@@ -49,6 +109,7 @@ export const data = defineData({
     defaultAuthorizationMode: 'apiKey',
   },
 });
+
 
 /*== STEP 2 ===============================================================
 Go to your frontend source code. From your client-side code, generate a

@@ -156,6 +156,150 @@
             }
           }
         }
+      },
+      "mutations": {
+        "createOrder": {
+          "name": "createOrder",
+          "isArray": false,
+          "type": {
+            "nonModel": "Order"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "customer_code": {
+              "name": "customer_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "product_code": {
+              "name": "product_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "estimated_cost": {
+              "name": "estimated_cost",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "quantity": {
+              "name": "quantity",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "unit_price": {
+              "name": "unit_price",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "delivery_date": {
+              "name": "delivery_date",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "created_at": {
+              "name": "created_at",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
+        },
+        "updateOrder": {
+          "name": "updateOrder",
+          "isArray": false,
+          "type": {
+            "nonModel": "Order"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "customer_code": {
+              "name": "customer_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "product_code": {
+              "name": "product_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "estimated_cost": {
+              "name": "estimated_cost",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "quantity": {
+              "name": "quantity",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "unit_price": {
+              "name": "unit_price",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "delivery_date": {
+              "name": "delivery_date",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "created_at": {
+              "name": "created_at",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
+        },
+        "deleteOrder": {
+          "name": "deleteOrder",
+          "isArray": false,
+          "type": "Boolean",
+          "isRequired": false,
+          "arguments": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
       }
     }
   },
