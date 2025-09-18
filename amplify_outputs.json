@@ -36,8 +36,156 @@
     ],
     "model_introspection": {
       "version": 1,
-      "models": {},
-      "enums": {},
+      "models": {
+        "ProcessingJob": {
+          "name": "ProcessingJob",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "fileName": {
+              "name": "fileName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "totalRows": {
+              "name": "totalRows",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "processedRows": {
+              "name": "processedRows",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "totalBatches": {
+              "name": "totalBatches",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "processedBatches": {
+              "name": "processedBatches",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "successfulOrders": {
+              "name": "successfulOrders",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "failedOrders": {
+              "name": "failedOrders",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": {
+                "enum": "ProcessingJobStatus"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "startTime": {
+              "name": "startTime",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "endTime": {
+              "name": "endTime",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "errorMessage": {
+              "name": "errorMessage",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "ProcessingJobs",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        }
+      },
+      "enums": {
+        "ProcessingJobStatus": {
+          "name": "ProcessingJobStatus",
+          "values": [
+            "PENDING",
+            "PROCESSING",
+            "COMPLETED",
+            "FAILED"
+          ]
+        }
+      },
       "nonModels": {
         "Order": {
           "name": "Order",
@@ -303,5 +451,49 @@
       }
     }
   },
-  "version": "1.4"
+  "storage": {
+    "aws_region": "ap-northeast-1",
+    "bucket_name": "amplify-amplifyvuetsapp-n-csvprocessingstoragebuck-8o8mfp2yrgkk",
+    "buckets": [
+      {
+        "name": "csvProcessingStorage",
+        "bucket_name": "amplify-amplifyvuetsapp-n-csvprocessingstoragebuck-8o8mfp2yrgkk",
+        "aws_region": "ap-northeast-1",
+        "paths": {
+          "public/csv-uploads/*": {
+            "guest": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ],
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "public/processed-files/*": {
+            "guest": [
+              "get",
+              "list"
+            ],
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "version": "1.4",
+  "custom": {
+    "bucketName": "amplify-amplifyvuetsapp-n-csvprocessingstoragebuck-8o8mfp2yrgkk",
+    "queueUrl": "https://sqs.ap-northeast-1.amazonaws.com/454953018734/amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-l9BzVQ4CGWsq",
+    "queueArn": "arn:aws:sqs:ap-northeast-1:454953018734:amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-l9BzVQ4CGWsq"
+  }
 }

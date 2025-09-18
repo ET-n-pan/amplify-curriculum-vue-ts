@@ -7,15 +7,27 @@ const client = generateClient<Schema>();
 
 // 商品ごとの単価を定義
 const productPrices: { [key: string]: number } = {
-	PROD001: 1000,
-	PROD002: 2000,
-	PROD003: 3000,
+	PROD001: 89800,
+	PROD002: 2500,
+	PROD003: 8900,
+};
+
+// 商品名を定義
+const productNames: { [key: string]: string } = {
+	PROD001: "ノートパソコン",
+	PROD002: "マウス",
+	PROD003: "キーボード",
 };
 
 // 商品コードに基づいて単価を設定
 function updateUnitPrice(product_code : string): number {
-	return productPrices[product_code] || 0;
+	return productPrices[product_code] || 5000;
 }
+
+// localStorageキー
+const ORDERS_KEY = 'orders';
+// キャッシュタイムスタンプキー
+const CACHE_TIMESTAMP_KEY = 'orders_cache_timestamp';
 
 export const useFormStore = defineStore("form", {
 	state: () => ({
@@ -30,16 +42,138 @@ export const useFormStore = defineStore("form", {
 		status: "新規",
 		estimated_cost: "1000",
 
+		// 注文データ
+		allOrders: [] as Array<Schema['Order']["type"]>,
+		// フィルタリングされた注文データ
+		filteredOrders: [] as Array<Schema['Order']["type"]>,
 
+		// ローディング状態
+		isLoading: false,
+		// 最後の同期時間
+		lastSyncTime: null as Date | null,
 
-		// 注文リストをlocalStorageから取得
-		orders: JSON.parse(localStorage.getItem('orders') || '[]'),
 		// ページネーション
 		page: 1,
 	}),
-  
+	getters: {
+		// 注文数を取得
+		ordersCount: (state) => state.allOrders.length,
+
+		// 最後の同期時間を文字列で取得
+		lastSyncTimeString: (state) => {
+			return state.lastSyncTime ? state.lastSyncTime.toLocaleString() : "未同期";
+		}
+	},
   	// アクション定義
 	actions: {
+		// localStorage操作
+		saveOrdersToLocalStorage() {
+			localStorage.setItem(ORDERS_KEY, JSON.stringify(this.allOrders));
+			localStorage.setItem(CACHE_TIMESTAMP_KEY, new Date().toISOString());
+		},
+		loadOrdersFromLocalStorage() {
+			const stored = localStorage.getItem(ORDERS_KEY);
+			return stored ? JSON.parse(stored) : [];
+		},
+
+		getCacheTimestamp(): Date | null {
+			const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+			return timestamp ? new Date(timestamp) : null;
+		},
+		// キャッシュクリア
+		clearCache() {
+			localStorage.removeItem(ORDERS_KEY);
+			localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+			this.allOrders = [];
+			this.filteredOrders = [];
+			this.lastSyncTime = null;
+		},
+
+		// 初期化: キャッシュから読み込み、必要に応じて同期
+		async initialize() {
+			// キャッシュから読み込み
+			this.allOrders = this.loadOrdersFromLocalStorage();
+			this.lastSyncTime = this.getCacheTimestamp();
+			this.filteredOrders = [...this.allOrders];
+
+			console.log("lastSyncTime:", this.lastSyncTime);
+			// 必要に応じてサーバーと同期（例: 最後の同期から1時間以上経過している場合、またはキャッシュがない場合）
+			if (!this.lastSyncTime || (new Date().getTime() - this.lastSyncTime.getTime()) > 3600000) {
+				console.log("Syncing with server...");
+				await this.syncWithServer();
+			}
+
+			// フィルタリングをリセット
+			this.filteredOrders = [...this.allOrders];
+			this.page = 1;
+
+		},
+		// サーバーと同期
+		async syncWithServer(): Promise<{ success: boolean; message: string }> {
+			try{
+				this.isLoading = true;
+				const result = await client.queries.getOrder();
+
+				if (result.data) {
+					this.allOrders = result.data;
+					this.filteredOrders = [...this.allOrders];
+					this.lastSyncTime = new Date();
+					this.saveOrdersToLocalStorage();
+					return { success: true, message: "同期に成功しました" };
+				} else {
+					return { success: false, message: "データ取得に失敗しました" };
+				}
+			} catch (error) {
+				console.error("Sync error:", error);
+				return { success: false, message: "同期中にエラーが発生しました" };
+			} finally {
+				this.isLoading = false;
+			}
+		},
+
+		// フィルタリング機能
+		applyFiltersAndSort(filters: {
+			customer_code: string;
+			product_code: string;
+			min_quantity: string;
+		}, sort: {
+			field: string;
+			direction: 'asc' | 'desc';
+		}) {
+			let result = [...this.allOrders];
+			
+			// フィルタリング
+			if (filters.customer_code.trim()) {
+				result = result.filter(order => 
+					order.customer_code?.toLowerCase().includes(filters.customer_code.toLowerCase())
+				);
+			}
+			
+			if (filters.product_code) {
+				result = result.filter(order => order.product_code === filters.product_code);
+			}
+			
+			if (filters.min_quantity && !isNaN(Number(filters.min_quantity))) {
+				result = result.filter(order => 
+					Number(order.quantity) >= Number(filters.min_quantity)
+				);
+			}
+			
+			// ソート
+			if (sort.field) {
+				result.sort((a, b) => {
+					const aVal = a[sort.field];
+					const bVal = b[sort.field];
+					
+					const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+					return sort.direction === 'asc' ? comparison : -comparison;
+				});
+			}
+			
+			this.filteredOrders = result;
+		},
+
+
 		// フォームリセット
 		reset() {
 			this.customer_code = "15112009";
@@ -48,21 +182,6 @@ export const useFormStore = defineStore("form", {
 			this.delivery_date = new Date().toISOString().split('T')[0];
 			this.product_code = "PROD001";
 		},
-		setOrders(orders: any) {
-			this.orders = []; // 既存の注文をクリア
-			this.orders = orders;
-			localStorage.setItem('orders', JSON.stringify(this.orders));
-		},
-		async fetchOrders() {
-			const result = await client.queries.getOrders();
-			if (result.data) {
-				this.setOrders(result.data.items);
-				console.log("Orders fetched:", result.data.items);
-			}else{
-				console.error("Failed to fetch orders");
-			}
-		},
-
 		// フォームバリデーション
 		validateForm() {
 			const errors = [];
@@ -87,39 +206,58 @@ export const useFormStore = defineStore("form", {
 		},
 		
 		// 注文数量更新
-		async updateOrderQuantity(orderId: any, newQuantity: any) {
-			const order = this.orders.find((o: { ID: any; }) => o.ID === orderId);
-			console.log(order);
-			if (order) {
-				order.quantity = newQuantity;
-				localStorage.setItem('orders', JSON.stringify(this.orders));
+		async updateOrder(orderId: any, orderData: any) {
+			if (!orderId) {
+				return { success: false, message: "無効な注文IDです" };
 			}
-
-	
-			// DB更新
-			const result = await client.mutations.updateOrder(order);
-			if (result.data) {
-				console.log("Order updated:", result.data);
-			}else{
-				console.error("Failed to update order ID:", orderId);
-				this.fetchOrders(); // 再度注文を取得して同期
+			if (!orderData || typeof orderData !== 'object') {
+				return { success: false, message: "無効な注文データです" };
 			}
+			// 数量と単価を更新
+			const quantity = parseInt(orderData.quantity);
+			const unit_price = orderData.unit_price ? parseInt(orderData.unit_price) : updateUnitPrice(orderData.product_code);
+			const estimated_cost = quantity * unit_price;
+			if (isNaN(quantity) || quantity <= 0) {
+				return { success: false, message: "数量は1以上の数値を入力してください" };
+			}
+			if (isNaN(unit_price) || unit_price <= 0) {
+				return { success: false, message: "無効な商品コードです" };
+			}
+			const updatedOrder = {
+				...orderData,
+				quantity: quantity,
+				unit_price: unit_price,
+				estimated_cost: estimated_cost,
+			};
+			try {
+				//localデータ更新
+				const index = this.allOrders.findIndex((o: { ID: any; }) => o.ID === orderId);
+				if (index !== -1) {
+					this.allOrders[index] = updatedOrder;
+					this.filteredOrders = [...this.allOrders];
+					this.saveOrdersToLocalStorage();
+				} else {
+					return { success: false, message: "注文が見つかりません" };
+				}
+				// DB更新
+				const result = await client.mutations.updateOrder(updatedOrder);
+				if (result.data) {
+					return { success: true, message: "注文が更新されました", order: result.data };
+				}
+				return { success: false, message: "更新に失敗しました" };
+			} catch (error) {
+				console.error("Update order error:", error);
+				return { success: false, message: "更新中にエラーが発生しました" };
+			}	
 		},
 
-		updateOrder(orderId: any, updatedData: any) {
-			const orderIndex = this.orders.findIndex((o: { ID: any; }) => o.ID === orderId);
-			if (orderIndex !== -1) {
-				this.orders[orderIndex] = { ...this.orders[orderIndex], ...updatedData };
-				localStorage.setItem('orders', JSON.stringify(this.orders));
-			}
-		},
-
-		// 注文追加
-		addOrder() {
+		// 注文追加	
+		async addOrder(): Promise<{ success: boolean; message: string; order?: any }> {
+			console.log('date: ', (document.getElementById('date') as HTMLInputElement)?.value);
+			console.log("Adding order...", this.customer_code, this.product_code, this.quantity, this.delivery_date);
 			const validationErrors = this.validateForm();
 			
 			if (validationErrors.length > 0) {
-				// エラーメッセージ表示
 				const errorMessage = validationErrors.join('\n');
 				return { success: false, message: errorMessage };
 			}
@@ -129,75 +267,62 @@ export const useFormStore = defineStore("form", {
 				ID: Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
 				customer_code: this.customer_code,
 				product_code: this.product_code,
-				quantity: this.quantity,
+				quantity: parseInt(this.quantity),
 				unit_price: updateUnitPrice(this.product_code),
 				estimated_cost: (parseInt(this.quantity) * updateUnitPrice(this.product_code)),
 				delivery_date: this.delivery_date,
 				status: "新規",
-				created_at: new Date().toLocaleString(),
+				created_at: new Date().toISOString(),
 			};
-			
-			// 注文リストに追加
-			this.orders.push(newOrder);
-			// localStorageに保存
-			localStorage.setItem('orders', JSON.stringify(this.orders));
-			
-			// フォームをリセット
-			this.reset();
-			return { success: true, message: "注文が追加されました。", order: newOrder };
+
+			try {
+				// DBに追加
+				const result = await client.mutations.createOrder(newOrder);
+				if (result.data) {
+					// ローカルデータに追加
+					this.allOrders.push(result.data);
+					this.filteredOrders.push(result.data);
+					this.saveOrdersToLocalStorage();
+					
+					// フォームをリセット
+					this.reset();
+					return { success: true, message: "注文が追加されました", order: result.data };
+				}
+				return { success: false, message: "追加に失敗しました" };
+			} catch (error) {
+				console.error("Add order error:", error);
+				return { success: false, message: "追加中にエラーが発生しました" };
+			}
 		},
-		
-		// 全注文クリア
-		clearAllOrders() {
-			this.orders = [];
-			localStorage.removeItem('orders');
+		// 注文削除
+		async deleteSelectedOrders(selectedOrderIds: string[]): Promise<{ success: boolean; message: string }> {
+			if (selectedOrderIds.length === 0) {
+				return { success: false, message: "削除する注文を選択してください" };
+			}
+			try {
+				// ローカルデータから削除
+				this.allOrders = this.allOrders.filter((order: { ID: string; }) => 
+					!selectedOrderIds.includes(order.ID as string)
+				);
+				this.filteredOrders = this.filteredOrders.filter((order: { ID: string; }) => 
+					!selectedOrderIds.includes(order.ID as string)
+				);
+
+				this.saveOrdersToLocalStorage();
+
+				// DBから削除
+				for (const orderId of selectedOrderIds) {
+					await client.mutations.deleteOrder({ ID: orderId });
+				}
+				
+				return { 
+					success: true, 
+					message: `${selectedOrderIds.length}件の注文を削除しました` 
+				};
+			} catch (error) {
+				console.error("Delete orders error:", error);
+				return { success: false, message: "削除中にエラーが発生しました" };
+			}
 		},
-
-		// 選択した注文を削除
-		async deleteOrder(selectionElement: { selected: string; } | null, messageElement: { open: boolean; innerText: string; } | null) {
-			if (selectionElement == null) {
-				if (messageElement != null) {
-					messageElement.open = true;
-					messageElement.innerText = "選択機能が見つかりません。";
-				}
-				return;
-			}
-			const selectedRows = selectionElement.selected.split(" ");
-			console.log("Selected rows to delete:", selectedRows);
-			if (selectedRows.length === 0 || (selectedRows.length === 1 && selectedRows[0] === '')) {
-				if (messageElement != null) {
-					messageElement.open = true;
-					messageElement.innerText = "削除する注文を選択してください。";
-				}
-				return;
-			}
-			this.orders = this.orders.filter((order: { ID: any; }) => !selectedRows.includes(order.ID));
-			localStorage.setItem('orders', JSON.stringify(this.orders));
-			selectionElement.selected = '';
-
-
-
-			// 削除リクエストを送信
-			for (let orderId of selectedRows) {
-				console.log("Deleting order ID:", orderId);
-				try {
-					const result = await client.mutations.deleteOrder({ ID: orderId });
-					if (result.data) {
-						console.log("Order deleted:", result.data);
-					}else{
-						console.error("Failed to delete order ID:", orderId);
-						this.fetchOrders(); // 再度注文を取得して同期
-					}
-				} catch (error) {
-					console.error("Error deleting order ID:", orderId, error);
-					this.fetchOrders(); // 再度注文を取得して同期
-				}
-			}
-			if (messageElement != null) {
-				messageElement.open = true;
-				messageElement.innerText = `${selectedRows.length}件の注文を削除しました。`;
-			}
-			return;
-		}
   }
 });

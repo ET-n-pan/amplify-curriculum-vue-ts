@@ -27,7 +27,7 @@
 
 			<ui5-form-item>
 				<ui5-label slot="labelContent" required>納期:</ui5-label>
-				<ui5-date-picker v-model="formStore.delivery_date"></ui5-date-picker>
+				<ui5-date-picker v-model="formStore.delivery_date" value-format='yyyy-MM-dd' format-pattern="yyyy-MM-dd" ref="formStore.delivery_date"></ui5-date-picker>
 			</ui5-form-item>
 
 		</ui5-form>
@@ -40,7 +40,64 @@
 		</div>
 		</ui5-panel>
     </div>
-	
+
+	<!-- フィルタリング・ソートパネル -->
+    <ui5-panel header-text="フィルタ・ソート" style="max-width: 1500px; margin-bottom: 10px;">
+        <ui5-form>
+            <ui5-form-item>
+                <ui5-label slot="labelContent">顧客コード:</ui5-label>
+                <ui5-input v-model="filters.customer_code" @input="applyFilters" placeholder="フィルタ..."></ui5-input>
+            </ui5-form-item>
+            
+            <ui5-form-item>
+                <ui5-label slot="labelContent">商品:</ui5-label>
+                <ui5-select v-model="filters.product_code" @change="applyFilters">
+                    <ui5-option value="">すべて</ui5-option>
+                    <ui5-option value="PROD001">商品A</ui5-option>
+                    <ui5-option value="PROD002">商品B</ui5-option>
+                    <ui5-option value="PROD003">商品C</ui5-option>
+                </ui5-select>
+            </ui5-form-item>
+            
+            <ui5-form-item>
+                <ui5-label slot="labelContent">数量（以上）:</ui5-label>
+                <ui5-input v-model="filters.min_quantity" @input="applyFilters" type="Number" placeholder="0"></ui5-input>
+            </ui5-form-item>
+            
+            <ui5-form-item>
+                <ui5-label slot="labelContent">ソート:</ui5-label>
+                <ui5-select v-model="sortConfig.field" @change="applyFilters">
+                    <ui5-option value="">なし</ui5-option>
+                    <ui5-option value="ID">注文ID</ui5-option>
+                    <ui5-option value="customer_code">顧客コード</ui5-option>
+                    <ui5-option value="product_code">商品コード</ui5-option>
+                    <ui5-option value="quantity">数量</ui5-option>
+                    <ui5-option value="delivery_date">納期</ui5-option>
+                    <ui5-option value="created_at">注文日</ui5-option>
+                </ui5-select>
+            </ui5-form-item>
+            
+            <ui5-form-item>
+                <ui5-label slot="labelContent">順序:</ui5-label>
+                <ui5-select v-model="sortConfig.direction" @change="applyFilters">
+                    <ui5-option value="asc">昇順</ui5-option>
+                    <ui5-option value="desc">降順</ui5-option>
+                </ui5-select>
+            </ui5-form-item>
+        </ui5-form>
+        
+        <!-- アクションボタンと情報表示 -->
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; flex-direction: row; align-items: flex-end;">
+            <ui5-button design="Emphasized" @click="refreshFromServer" style="min-width: 70px;">更新</ui5-button>
+			<ui5-button @click="clearFilters" style="min-width: 70px;">クリア</ui5-button>
+        </div>
+		<div style="font-size: 0.875rem; color: #666; text-align: right;">
+                表示: {{ formStore.filteredOrders.length }} / 全体: {{ formStore.ordersCount }}
+                <br>
+                最終同期: {{ formStore.lastSyncTimeString }}
+		</div>
+    </ui5-panel>
+
     <!-- エラーメッセージ表示用トースト -->
     <ui5-toast id="message" ref="messageRef"></ui5-toast>
 	<!-- オーダー一覧テーブル -->
@@ -58,11 +115,11 @@
         <ui5-illustrated-message slot="noData" name="NoData"></ui5-illustrated-message>
 
 		<!-- オーダー一覧 -->
-		<ui5-table-row v-for="order in formStore.orders" :row-key="order.ID" :key="order.ID">
+		<ui5-table-row v-for="order in formStore.filteredOrders" :row-key="order.ID" :key="order.ID">
 			<ui5-table-cell><ui5-label>{{ order.ID }}</ui5-label></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.customer_code }}</ui5-label></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.product_code }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-input  :value="String(order.quantity)" @input="formStore.updateOrderQuantity(order.ID, $event.target.value)"></ui5-input></ui5-table-cell>
+			<ui5-table-cell><ui5-input  :value="String(order.quantity)" @input="updateOrder(order.ID, {...order, quantity: $event.target.value})"></ui5-input></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.delivery_date }}</ui5-label></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.created_at }}</ui5-label></ui5-table-cell>
 		</ui5-table-row>
@@ -73,80 +130,41 @@
 
 <script setup lang="ts">
 import { useFormStore } from "@/stores/form-store";
-import "@ui5/webcomponents/dist/Panel.js";
-import "@ui5/webcomponents/dist/Form.js";
-import "@ui5/webcomponents/dist/FormGroup.js";
-import "@ui5/webcomponents/dist/FormItem.js";
-import "@ui5/webcomponents/dist/Bar.js";
-import "@ui5/webcomponents/dist/Table.js";
-import "@ui5/webcomponents/dist/TableRow.js";
-import "@ui5/webcomponents/dist/TableCell.js";
-import "@ui5/webcomponents/dist/Label.js";
-import "@ui5/webcomponents/dist/Toast.js";
-import "@ui5/webcomponents/dist/TableHeaderRow.js";
-import "@ui5/webcomponents/dist/TableHeaderCell.js";
-import "@ui5/webcomponents/dist/TableSelection.js";
-import "@ui5/webcomponents-fiori/dist/IllustratedMessage.js";
-import "@ui5/webcomponents-fiori/dist/illustrations/NoData.js";
-import "@ui5/webcomponents/dist/Input.js";
-import "@ui5/webcomponents/dist/ComboBox.js";
-import "@ui5/webcomponents/dist/ComboBoxItem.js";
-import "@ui5/webcomponents/dist/DatePicker.js";
-import "@ui5/webcomponents/dist/TextArea.js";
-import { ref, onMounted } from "vue";
-import type { Schema } from "@/amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
-import { ODataQueryBuilder } from "@/utils/ODataQueryBuilder";
+import "@/lib/UI5FormComp";
+import { ref, onMounted, reactive, nextTick,computed } from "vue";
 
-
+// UIレファレンス
 const messageRef = ref<any>(null);
 const selectionRef = ref<any>(null);
+
+// DataStoreクライアントの生成
 const formStore = useFormStore();
 
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-const orders = ref<Array<Schema['Order']["type"]>>([]);
 
-/**
+const delivery_ate = computed({
+  get: () => formStore.deliveryDate,
+  set: (value) => {
+    formStore.deliveryDate = value;
+  }
+});
 
-// 1. 見積もり金額が1000以上、3000以下の注文を取得し、金額の昇順で上位5件を取得
-const getMidValueOrders = async () => {
-   const result = await client.queries.getOrder({
-       filter: ODataQueryBuilder.filter.and(
-          ODataQueryBuilder.filter.ge('estimated_cost', 1000),
-          ODataQueryBuilder.filter.le('estimated_cost', 3000)
-       ),
-       orderby: ODataQueryBuilder.orderBy.asc('estimated_cost'),
-       top: 5
-    });
-   console.log("Mid value orders:", result.data);
-   return result.data;
-};
-
-// 2. 顧客コードが'15112009'の注文を取得し、注文ID、顧客コード、数量、作成日のみ表示
-const getCustomerOrders = async (customerId: string) => {
-   const result = await client.queries.getOrder({  
-       filter: ODataQueryBuilder.filter.eq('customer_code', customerId),
-       select: ODataQueryBuilder.select.fields('ID', 'customer_code', 'quantity', 'created_at')
-    });
-   console.log("Customer orders:", result.data);
-   return result.data;
-};
-
-// 3. 作成日が2025年9月11日以降の注文を取得し、作成日の降順で上位3件を取得
-const getRecentOrders = async () => {
-   const result = await client.queries.getOrder({
-         filter: ODataQueryBuilder.filter.ge('created_at', '2025-09-12T00:00:00Z'),
-         orderby: ODataQueryBuilder.orderBy.desc('created_at'),
-         top: 3
-    });
-   console.log("Recent orders:", result.data);
-   return result.data;
-};
- */
+// フィルタリングとソートの状態管理
+// reactiveを使用して、オブジェクト内容が変更されたときにリアクティブに反応するようにする
+const filters = reactive({
+    customer_code: '',
+    product_code: '',
+    min_quantity: ''
+});
+const sortConfig = reactive({
+    field: '',
+    direction: 'asc' as 'asc' | 'desc'
+});
 
 
+// 初期データ取得
 onMounted(async () => {
-	await fetchOrders();
+	console.log("Initializing form store...");
+	await formStore.initialize();
 });
 
 // トースト表示関数
@@ -157,39 +175,60 @@ const showToast = (msg: string) => {
 	}
 }
 
-// 注文追加関数
-async function addOrder() {
-	const {success, message, order} = formStore.addOrder();
-	if (success === true && order !== undefined) {
-		// DBに追加
-		await client.mutations.createOrder(order)
-			.then(() => {
-				showToast("注文が追加されました。");
-				fetchOrders(); // 注文一覧を再取得して更新
-			})
-	} else {
-		showToast(message);
-		return;
-		
+// 注文追加
+const addOrder = async () =>{
+	const result = await formStore.addOrder();
+	showToast(result.message);
+	if (result.success) {
+		// 追加成功時はフォームクリアと選択解除
+		formStore.reset();
 	}
 }
 
-// 注文削除関数
-const deleteOrder = () => {
-	console.log("Deleting orders:", selectionRef.value);
-	formStore.deleteOrder(selectionRef.value, messageRef.value);
-}
-
-const fetchOrders = async () => {
-	try {
-		const result = await client.queries.getOrder();
-		if (result.data) {
-			formStore.setOrders(result.data);
-		}
-	} catch (error) {
-		console.error("Error fetching orders:", error);
-		showToast("注文の取得中にエラーが発生しました。");
-	}
+// 注文削除
+const deleteOrder = async () => {
+    const selectedRows = selectionRef.value?.selected.split(" ") || [];
+	console.log("Selected rows for deletion:", selectedRows);
+    const result = await formStore.deleteSelectedOrders(selectedRows);
+    showToast(result.message);
+    
+    if (result.success) {
+        // Clear selection
+		formStore.reset();
+    }
 };
+
+// 注文更新
+const updateOrder = async (orderId: string, updatedOrder: any) => {
+	const result = await formStore.updateOrder(orderId, updatedOrder);
+	showToast(result.message);
+	return result.success;
+};
+
+// サーバーから最新データを取得
+const refreshFromServer = async () => {
+    const result = await formStore.syncWithServer();
+    showToast(result.message);
+    if (result.success) {
+        applyFilters(); // Refresh filtered view
+    }
+};
+
+// フィルタ適用
+const applyFilters = async () => {
+	await nextTick();
+    formStore.applyFiltersAndSort(filters, sortConfig);
+};
+
+// フィルタクリア
+const clearFilters = () => {
+    filters.customer_code = '';
+    filters.product_code = '';
+    filters.min_quantity = '';
+    sortConfig.field = '';
+    sortConfig.direction = 'asc';
+    applyFilters();
+};
+
 
 </script>

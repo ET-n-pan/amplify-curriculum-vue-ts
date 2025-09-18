@@ -5,7 +5,7 @@
       :columnDefs="columnDefs"
       :headerHeight="30"
       :rowHeight="35"
-      :rowData="formStore.orders"
+      :rowData="formStore.allOrders"
       :defaultColDef="defaultColDef"
       :theme="theme"
       style="height: 66vh"
@@ -20,15 +20,9 @@ import { themeAlpine, AllCommunityModule, ModuleRegistry } from "ag-grid-communi
 import "@ui5/webcomponents/dist/Title.js";
 import { useFormStore } from "@/stores/form-store";
 
-import type { Schema } from "@/amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-const orders = ref<Array<Schema['Order']["type"]>>([]);
-
 onMounted(async () => {
-  const result = await client.queries.getOrder();
-  console.log("result:", result);
+  console.log("Initializing form store...");
+  await formStore.initialize();
 });
 
 // コミュニティ版のモジュール登録
@@ -69,7 +63,6 @@ const recalculateEstimateCost = (params: any) => {
   const quantity = parseCurrency(data.quantity);
   const unitPrice = parseCurrency(data.unit_price);
   data.estimated_cost = quantity * unitPrice;
-
   // テーブルとストアの両方を更新
   params.api.applyTransaction({ update: [data] });
   formStore.updateOrder(data.ID, data);

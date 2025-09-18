@@ -30,6 +30,17 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: "/upload",                                    // アップロードページのパス
+    component: () => import("@/layout/MainLayout.vue"), // 同じレイアウトを使用
+    children: [
+      {
+        path: "",                                        // plan3 アクセス時の子コンポーネント
+        name: "upload",
+        component: () => import("@/pages/UploadPage.vue"), // UploadPage コンポーネントを表示
+      },
+    ],
+  }
 ];
 
 // ルーター作成: 上記のルート設定でルーターインスタンスを作成
