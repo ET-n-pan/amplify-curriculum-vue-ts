@@ -130,7 +130,8 @@ const onProfileClick = (event) => {
 const navItems = [
   { path: "/aggrid", label: "AgGridテーブル", icon: "table-chart" },
   { path: "/ui5-table", label: "注文情報試作", icon: "my-sales-order" },
-  { path: "/upload", label: "CSVアップロード", icon: "upload" }
+  { path: "/upload", label: "CSVアップロード", icon: "upload" },
+  { path: "/sales", label: "売上情報", icon: "sap-icon://area-chart" }
 ];
 // サイドバーの表示・非表示を切り替える関数
 const toggleSidebar = () => {

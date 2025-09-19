@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData, secret } from '@aws-amplify/backend';
+import { count } from 'console';
 
 const schema = a.schema({
   Order: a.customType({
@@ -10,7 +11,12 @@ const schema = a.schema({
       unit_price: a.float(),
       delivery_date: a.string(),
       status: a.string(),
-      created_at: a.string()
+      created_at: a.string(),
+      count: a.integer()
+    }),
+    OrderResponse: a.customType({
+      data: a.ref("Order").array(),
+      count: a.integer()
     }),
     ProcessingJob: a.model({
       fileName: a.string().required(),
@@ -37,7 +43,7 @@ const schema = a.schema({
         select: a.string(),
         search: a.string(),
       })
-      .returns(a.ref("Order").array())
+      .returns(a.ref("OrderResponse"))
       .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
       .handler(
         a.handler.custom({
@@ -104,6 +110,7 @@ const schema = a.schema({
         })
       ),
       
+    
 
     
 });

@@ -252,6 +252,35 @@
               "type": "String",
               "isRequired": false,
               "attributes": []
+            },
+            "count": {
+              "name": "count",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
+        },
+        "OrderResponse": {
+          "name": "OrderResponse",
+          "fields": {
+            "data": {
+              "name": "data",
+              "isArray": true,
+              "type": {
+                "nonModel": "Order"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "count": {
+              "name": "count",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
             }
           }
         }
@@ -259,12 +288,11 @@
       "queries": {
         "getOrder": {
           "name": "getOrder",
-          "isArray": true,
+          "isArray": false,
           "type": {
-            "nonModel": "Order"
+            "nonModel": "OrderResponse"
           },
           "isRequired": false,
-          "isArrayNullable": true,
           "arguments": {
             "orderby": {
               "name": "orderby",
@@ -473,18 +501,6 @@
               "write",
               "delete"
             ]
-          },
-          "public/processed-files/*": {
-            "guest": [
-              "get",
-              "list"
-            ],
-            "authenticated": [
-              "get",
-              "list",
-              "write",
-              "delete"
-            ]
           }
         }
       }
@@ -493,7 +509,8 @@
   "version": "1.4",
   "custom": {
     "bucketName": "amplify-amplifyvuetsapp-n-csvprocessingstoragebuck-8o8mfp2yrgkk",
-    "queueUrl": "https://sqs.ap-northeast-1.amazonaws.com/454953018734/amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-l9BzVQ4CGWsq",
-    "queueArn": "arn:aws:sqs:ap-northeast-1:454953018734:amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-l9BzVQ4CGWsq"
+    "queueUrl": "https://sqs.ap-northeast-1.amazonaws.com/454953018734/amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-GD2eBg9CLwVm",
+    "queueArn": "arn:aws:sqs:ap-northeast-1:454953018734:amplify-amplifyvuetsapp-nileipan00128-sandb-ProcessingQueue6DC600C3-GD2eBg9CLwVm",
+    "processingJobTable": "ProcessingJob-dd4gy6kyrnfzlc74e2ssjzvt5a-NONE"
   }
 }

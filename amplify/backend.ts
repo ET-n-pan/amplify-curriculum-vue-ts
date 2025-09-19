@@ -1,3 +1,4 @@
+// amplify/backend.ts
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
@@ -15,35 +16,45 @@ const backend = defineBackend({
   data,
   storage,
   csvReader,
-  jobProcessor
+  jobProcessor,
 });
 
-// Your existing OData setup
 const odataDataSource = backend.data.addHttpDataSource(
   "OdataDataSource",
   "https://8q5zg2p8tj.us-east-1.awsapprunner.com"
 );
 
-// Get the storage stack (where functions are now located)
-const storageStack = Stack.of(backend.storage.resources.bucket);
+// ProcessingJobテーブルを取得
+const processingJobTable = backend.data.resources.tables['ProcessingJob'];
 
-// Use the storage bucket
+// Lambda関数にテーブルへの書き込み権限を付与
+processingJobTable.grantWriteData(backend.csvReader.resources.lambda);
+processingJobTable.grantWriteData(backend.jobProcessor.resources.lambda);
+
+// Lambda関数にテーブルへの書き込み権限を付与
+processingJobTable.grantWriteData(backend.csvReader.resources.lambda);
+processingJobTable.grantWriteData(backend.jobProcessor.resources.lambda);
+
+// Data stackを取得
+const dataStack = Stack.of(backend.data.resources.graphqlApi); 
+
+// S3バケットを取得
 const csvBucket = backend.storage.resources.bucket;
 
-// Create SQS queue in the storage stack
-const processingQueue = new Queue(storageStack, 'ProcessingQueue', {
+// SQSキューを作成
+const processingQueue = new Queue(dataStack, 'ProcessingQueue', { 
   visibilityTimeout: Duration.seconds(300),
   receiveMessageWaitTime: Duration.seconds(20)
 });
 
-// Configure S3 trigger for CSV reader
+// S3バケットの特定のプレフィックスにファイルがアップロードされたときにLambdaをトリガー
 csvBucket.addEventNotification(
   EventType.OBJECT_CREATED,
   new LambdaDestination(backend.csvReader.resources.lambda),
   { prefix: 'public/csv-uploads/', suffix: '.csv' }
 );
 
-// Configure SQS trigger for job processor
+// Lambda関数にSQSイベントソースを追加
 backend.jobProcessor.resources.lambda.addEventSource(
   new SqsEventSource(processingQueue, {
     batchSize: 10,
@@ -51,22 +62,26 @@ backend.jobProcessor.resources.lambda.addEventSource(
   })
 );
 
-// Grant permissions
+// Lambda関数にS3バケットとSQSキューへのアクセス権限を付与
 csvBucket.grantRead(backend.csvReader.resources.lambda);
 processingQueue.grantSendMessages(backend.csvReader.resources.lambda);
 processingQueue.grantConsumeMessages(backend.jobProcessor.resources.lambda);
 
-// Environment variables
+// 環境変数
 backend.csvReader.addEnvironment('QUEUE_URL', processingQueue.queueUrl);
 backend.csvReader.addEnvironment('BUCKET_NAME', csvBucket.bucketName);
 backend.csvReader.addEnvironment('SQL_ENDPOINT', 'https://8q5zg2p8tj.us-east-1.awsapprunner.com/odata/v4/order');
+backend.csvReader.addEnvironment('PROCESSING_JOB_TABLE', processingJobTable.tableName);
 
 backend.jobProcessor.addEnvironment('SQL_ENDPOINT', 'https://8q5zg2p8tj.us-east-1.awsapprunner.com/odata/v4/order');
+backend.jobProcessor.addEnvironment('PROCESSING_JOB_TABLE', processingJobTable.tableName);
 
+// バックエンドの出力を定義
 backend.addOutput({
   custom: {
     bucketName: csvBucket.bucketName,
     queueUrl: processingQueue.queueUrl,
-    queueArn: processingQueue.queueArn
+    queueArn: processingQueue.queueArn,
+    processingJobTable: processingJobTable.tableName
   }
 });

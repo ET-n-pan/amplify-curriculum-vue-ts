@@ -56,7 +56,7 @@ export function response(ctx) {
   }
   if (ctx.result.statusCode === 200) {
     const body = JSON.parse(ctx.result.body);
-    return body.value;
+    return { data: body.value, count: body["@odata.count"] };
   } else {
     return util.appendError(ctx.result.body, `${ctx.result.statusCode}`);
   }

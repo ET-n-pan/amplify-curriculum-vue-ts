@@ -2,6 +2,7 @@
 import { defineStore } from "pinia";
 import type { Schema } from "@/amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { ODataQueryBuilder } from "../utils/oDataQueryBuilder";
 
 const client = generateClient<Schema>();
 
@@ -47,6 +48,8 @@ export const useFormStore = defineStore("form", {
 		// フィルタリングされた注文データ
 		filteredOrders: [] as Array<Schema['Order']["type"]>,
 
+		
+		count: 0,
 		// ローディング状態
 		isLoading: false,
 		// 最後の同期時間
@@ -54,15 +57,43 @@ export const useFormStore = defineStore("form", {
 
 		// ページネーション
 		page: 1,
+		// 1ページあたりの表示件数
+		rowsPerPage: 10,
 	}),
 	getters: {
 		// 注文数を取得
-		ordersCount: (state) => state.allOrders.length,
+		ordersCount: (state) => {
+			return Math.max(state.count, state.allOrders.length);
+		},
 
 		// 最後の同期時間を文字列で取得
 		lastSyncTimeString: (state) => {
 			return state.lastSyncTime ? state.lastSyncTime.toLocaleString() : "未同期";
-		}
+		},
+		
+		filteredOrdersCount: (state) => state.filteredOrders.length,
+
+		totalPages: (state) => {
+			return Math.ceil(state.filteredOrders.length / state.rowsPerPage);
+		},
+
+		paginatedOrders: (state) => {
+			const start = (state.page - 1) * state.rowsPerPage;
+			return state.filteredOrders.slice(start, start + state.rowsPerPage);
+		},
+
+		// ページネーション情報
+		paginationInfo: (state) => {
+			const startItem = (state.page - 1) * state.rowsPerPage + 1;
+			const endItem = Math.min(state.page * state.rowsPerPage, state.filteredOrders.length);
+			return {
+				startItem,
+				endItem,
+				totalItems: state.filteredOrders.length,
+				currentPage: state.page,
+				totalPages: Math.ceil(state.filteredOrders.length / state.rowsPerPage)
+			};
+		},
 	},
   	// アクション定義
 	actions: {
@@ -80,6 +111,39 @@ export const useFormStore = defineStore("form", {
 			const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
 			return timestamp ? new Date(timestamp) : null;
 		},
+
+		// ページネーション関連
+		setCurrentPage(page: number) {
+			if (page >= 1 && page <= this.totalPages) {
+				this.page = page;
+			}
+		},
+
+		setRowsPerPage(rows: number) {
+			this.rowsPerPage = rows;
+			this.page = 1; // ページをリセット
+		},
+
+		goToFirstPage() {
+			this.page = 1;
+		},
+
+		goToLastPage() {
+			this.page = this.totalPages;
+		},
+
+		goToNextPage() {
+			if (this.page < this.totalPages) {
+				this.page++;
+			}
+		},
+
+		goToPreviousPage() {
+			if (this.page > 1) {
+				this.page--;
+			}
+		},
+
 		// キャッシュクリア
 		clearCache() {
 			localStorage.removeItem(ORDERS_KEY);
@@ -103,8 +167,6 @@ export const useFormStore = defineStore("form", {
 				await this.syncWithServer();
 			}
 
-			// フィルタリングをリセット
-			this.filteredOrders = [...this.allOrders];
 			this.page = 1;
 
 		},
@@ -113,9 +175,12 @@ export const useFormStore = defineStore("form", {
 			try{
 				this.isLoading = true;
 				const result = await client.queries.getOrder();
-
-				if (result.data) {
-					this.allOrders = result.data;
+				console.log("Sync result:", result);
+				if (result.count) {
+					this.count = result.count;
+				}
+				if (result.data?.data) {
+					this.allOrders = result.data.data;
 					this.filteredOrders = [...this.allOrders];
 					this.lastSyncTime = new Date();
 					this.saveOrdersToLocalStorage();
@@ -171,6 +236,7 @@ export const useFormStore = defineStore("form", {
 			}
 			
 			this.filteredOrders = result;
+			this.page = 1; // ページをリセット
 		},
 
 

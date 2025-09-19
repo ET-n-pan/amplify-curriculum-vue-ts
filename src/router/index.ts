@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/layout/MainLayout.vue"), // 同じレイアウトを使用
     children: [
       {
-        path: "",                                        // plan3 アクセス時の子コンポーネント
+        path: "",
         name: "upload",
         component: () => import("@/pages/UploadPage.vue"), // UploadPage コンポーネントを表示
       },

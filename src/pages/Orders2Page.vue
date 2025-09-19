@@ -97,7 +97,77 @@
                 最終同期: {{ formStore.lastSyncTimeString }}
 		</div>
     </ui5-panel>
+	<!-- ページネーション情報・コントロール -->
+    <ui5-panel header-text="ページネーション" style="max-width: 1500px; margin-bottom: 10px;">
+        <div class="pagination-container">
+            <!-- ページサイズ選択 -->
+            <div class="page-size-section">
+                <ui5-label>表示件数:</ui5-label>
+                <ui5-select :model-value="formStore.rowsPerPage.toString()" @change="changeRowsPerPage">
+                    <ui5-option value="5">5件</ui5-option>
+                    <ui5-option value="10" selected>10件</ui5-option>
+                    <ui5-option value="20">20件</ui5-option>
+                    <ui5-option value="50">50件</ui5-option>
+                </ui5-select>
+            </div>
 
+            <!-- ページネーション情報 -->
+            <div class="pagination-info">
+                <span v-if="formStore.filteredOrdersCount > 0">
+                    {{ formStore.paginationInfo.startItem }} - {{ formStore.paginationInfo.endItem }} 
+                    / {{ formStore.paginationInfo.totalItems }}件
+                </span>
+                <span v-else>該当するデータがありません</span>
+            </div>
+
+            <!-- ページネーションコントロール -->
+            <div class="pagination-controls" v-if="formStore.totalPages > 1">
+                <!-- 最初のページ -->
+                <ui5-button 
+                    @click="formStore.goToFirstPage()" 
+                    :disabled="formStore.page === 1"
+                    design="Transparent">
+                    ≪
+                </ui5-button>
+                
+                <!-- 前のページ -->
+                <ui5-button 
+                    @click="formStore.goToPreviousPage()" 
+                    :disabled="formStore.page === 1"
+                    design="Transparent">
+                    ‹
+                </ui5-button>
+                
+                <!-- ページ番号 -->
+                <div class="page-numbers">
+                    <ui5-button 
+                        v-for="pageNum in getVisiblePageNumbers()" 
+                        :key="pageNum"
+                        @click="formStore.setCurrentPage(pageNum)"
+                        :design="pageNum === formStore.page ? 'Emphasized' : 'Transparent'"
+                        class="page-number">
+                        {{ pageNum }}
+                    </ui5-button>
+                </div>
+                
+                <!-- 次のページ -->
+                <ui5-button 
+                    @click="formStore.goToNextPage()" 
+                    :disabled="formStore.page === formStore.totalPages"
+                    design="Transparent">
+                    ›
+                </ui5-button>
+                
+                <!-- 最後のページ -->
+                <ui5-button 
+                    @click="formStore.goToLastPage()" 
+                    :disabled="formStore.page === formStore.totalPages"
+                    design="Transparent">
+                    ≫
+                </ui5-button>
+            </div>
+        </div>
+    </ui5-panel>
     <!-- エラーメッセージ表示用トースト -->
     <ui5-toast id="message" ref="messageRef"></ui5-toast>
 	<!-- オーダー一覧テーブル -->
@@ -115,7 +185,7 @@
         <ui5-illustrated-message slot="noData" name="NoData"></ui5-illustrated-message>
 
 		<!-- オーダー一覧 -->
-		<ui5-table-row v-for="order in formStore.filteredOrders" :row-key="order.ID" :key="order.ID">
+		<ui5-table-row v-for="order in formStore.paginatedOrders" :row-key="order.ID" :key="order.ID">
 			<ui5-table-cell><ui5-label>{{ order.ID }}</ui5-label></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.customer_code }}</ui5-label></ui5-table-cell>
 			<ui5-table-cell><ui5-label>{{ order.product_code }}</ui5-label></ui5-table-cell>
@@ -125,13 +195,14 @@
 		</ui5-table-row>
 
     </ui5-table>
+	
   	</div>
 </template>
 
 <script setup lang="ts">
 import { useFormStore } from "@/stores/form-store";
 import "@/lib/UI5FormComp";
-import { ref, onMounted, reactive, nextTick,computed } from "vue";
+import { ref, onMounted, reactive, nextTick } from "vue";
 
 // UIレファレンス
 const messageRef = ref<any>(null);
@@ -140,13 +211,6 @@ const selectionRef = ref<any>(null);
 // DataStoreクライアントの生成
 const formStore = useFormStore();
 
-
-const delivery_ate = computed({
-  get: () => formStore.deliveryDate,
-  set: (value) => {
-    formStore.deliveryDate = value;
-  }
-});
 
 // フィルタリングとソートの状態管理
 // reactiveを使用して、オブジェクト内容が変更されたときにリアクティブに反応するようにする
@@ -166,6 +230,41 @@ onMounted(async () => {
 	console.log("Initializing form store...");
 	await formStore.initialize();
 });
+
+// ページネーション関連の関数
+const changeRowsPerPage = (event: any) => {
+    const newSize = parseInt(event.target.value);
+    formStore.setRowsPerPage(newSize);
+};
+
+// 表示するページ番号を計算（最大5個まで表示）
+const getVisiblePageNumbers = () => {
+    const current = formStore.page;
+    const total = formStore.totalPages;
+    const visible = [];
+    
+    if (total <= 5) {
+        // 総ページ数が5以下の場合は全て表示
+        for (let i = 1; i <= total; i++) {
+            visible.push(i);
+        }
+    } else {
+        // 現在のページを中心に5個表示
+        let start = Math.max(1, current - 2);
+        let end = Math.min(total, start + 4);
+        
+        // 末尾に寄りすぎた場合の調整
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        
+        for (let i = start; i <= end; i++) {
+            visible.push(i);
+        }
+    }
+    
+    return visible;
+};
 
 // トースト表示関数
 const showToast = (msg: string) => {
@@ -232,3 +331,44 @@ const clearFilters = () => {
 
 
 </script>
+
+<style scoped>
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.page-size-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 2px;
+    margin: 0 8px;
+}
+
+.page-number {
+    min-width: 32px;
+    height: 32px;
+}
+
+</style>
