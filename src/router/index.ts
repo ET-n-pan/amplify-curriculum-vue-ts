@@ -40,7 +40,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/UploadPage.vue"), // UploadPage コンポーネントを表示
       },
     ],
-  }
+  },
+  {
+    path: "/sales",                                    // 売上ページのパス
+    component: () => import("@/layout/MainLayout.vue"), // 親レイアウト: 共通のヘッダー・フッターを表示
+    children: [                                          // 子ルート: 親レイアウト内に表示されるページ
+      {
+        path: "",                                        // 空パス: /sales にアクセス時に表示される子コンポーネント
+        name: "sales",                                 // ルート名: プログラムでナビゲーション時に使用
+        component: () => import("@/pages/SalesPage.vue"), // 実際の売上ページコンポーネント
+      },
+    ],
+  },
 ];
 
 // ルーター作成: 上記のルート設定でルーターインスタンスを作成

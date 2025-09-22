@@ -110,9 +110,74 @@ const schema = a.schema({
         })
       ),
       
-    
+  Sales: a.customType({
+      ID: a.string(),
+      sales_year: a.integer(),
+      sales_month: a.integer(),
+      sales_week: a.integer(),
+      customer_code: a.string(),
+      product_code: a.string(),
+      product_name: a.string(),
+      quantity: a.integer(),
+      unit_price: a.float(),
+      total_amount: a.float(),
+      order_status: a.string(),
+      payment_status: a.string(),
+      created_at: a.datetime(),
+      updated_at: a.datetime(),
+      count: a.integer(),
+  }),
+  
+  getSales: a
+    .query()
+    .returns(a.ref("Sales").array())
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "OdataDataSource",
+        entry: "./getSales.js",
+      })
+    ),
 
-    
+  addSales: a
+    .mutation()
+    .arguments({
+        ID: a.string(),
+        customer_code: a.string(),
+        product_code: a.string(),
+        product_name: a.string(),
+        quantity: a.integer(),
+        unit_price: a.float(),
+        total_amount: a.float(),
+        order_status: a.string(),
+        payment_status: a.string(),
+        sales_year: a.integer(),
+        sales_month: a.integer(),
+        sales_week: a.integer(),
+        created_at: a.datetime(),
+        updated_at: a.datetime(),
+    })
+    .returns(a.ref("Sales"))
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "OdataDataSource",
+        entry: "./addSales.js",
+      })
+    ),
+
+  deleteSales: a
+    .mutation()
+    .arguments({ ID: a.id().required() })
+    .returns(a.boolean())
+    .authorization(allow => [allow.publicApiKey()])
+    .handler(
+      a.handler.custom({
+        dataSource: "OdataDataSource",
+        entry: "./deleteSales.js",
+      })
+    ),
+
 });
 
 export type Schema = ClientSchema<typeof schema>;
