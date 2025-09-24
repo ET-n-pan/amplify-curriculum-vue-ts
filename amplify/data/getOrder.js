@@ -7,6 +7,8 @@ export function request(ctx) {
   // ページネーション
   if (args.top) {
     queryParams["$top"] = args.top;
+  }else{
+    queryParams["$top"] = 10000;
   }
 
   // スキップ
@@ -36,7 +38,6 @@ export function request(ctx) {
   
   queryParams["$count"] = true;
 
-  console.log("Query params:", JSON.stringify(queryParams, null, 2));
   return {
     method: "GET",
     resourcePath: "/odata/v4/order/OrderData",

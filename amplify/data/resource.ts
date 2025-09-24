@@ -130,7 +130,7 @@ const schema = a.schema({
   
   getSales: a
     .query()
-    .returns(a.ref("Sales").array())
+    .returns(a.ref("salesResponse"))
     .authorization(allow => [allow.publicApiKey()])
     .handler(
       a.handler.custom({
@@ -139,7 +139,7 @@ const schema = a.schema({
       })
     ),
 
-  addSales: a
+  createSale: a
     .mutation()
     .arguments({
         ID: a.string(),
@@ -162,22 +162,25 @@ const schema = a.schema({
     .handler(
       a.handler.custom({
         dataSource: "OdataDataSource",
-        entry: "./addSales.js",
+        entry: "./createSale.js",
       })
     ),
 
-  deleteSales: a
+  deleteSale: a
     .mutation()
-    .arguments({ ID: a.id().required() })
+    .arguments({ ID: a.string().required() })
     .returns(a.boolean())
     .authorization(allow => [allow.publicApiKey()])
     .handler(
       a.handler.custom({
         dataSource: "OdataDataSource",
-        entry: "./deleteSales.js",
+        entry: "./deleteSale.js",
       })
     ),
-
+  salesResponse: a.customType({
+    data: a.ref("Sales").array(),
+    count: a.integer()
+  }),
 });
 
 export type Schema = ClientSchema<typeof schema>;

@@ -283,6 +283,138 @@
               "attributes": []
             }
           }
+        },
+        "Sales": {
+          "name": "Sales",
+          "fields": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sales_year": {
+              "name": "sales_year",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sales_month": {
+              "name": "sales_month",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sales_week": {
+              "name": "sales_week",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "customer_code": {
+              "name": "customer_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "product_code": {
+              "name": "product_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "product_name": {
+              "name": "product_name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "quantity": {
+              "name": "quantity",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "unit_price": {
+              "name": "unit_price",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "total_amount": {
+              "name": "total_amount",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "order_status": {
+              "name": "order_status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "payment_status": {
+              "name": "payment_status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "created_at": {
+              "name": "created_at",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "updated_at": {
+              "name": "updated_at",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "count": {
+              "name": "count",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
+        },
+        "salesResponse": {
+          "name": "salesResponse",
+          "fields": {
+            "data": {
+              "name": "data",
+              "isArray": true,
+              "type": {
+                "nonModel": "Sales"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "count": {
+              "name": "count",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
         }
       },
       "queries": {
@@ -331,6 +463,14 @@
               "isRequired": false
             }
           }
+        },
+        "getSales": {
+          "name": "getSales",
+          "isArray": false,
+          "type": {
+            "nonModel": "salesResponse"
+          },
+          "isRequired": false
         }
       },
       "mutations": {
@@ -464,6 +604,114 @@
         },
         "deleteOrder": {
           "name": "deleteOrder",
+          "isArray": false,
+          "type": "Boolean",
+          "isRequired": false,
+          "arguments": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "createSale": {
+          "name": "createSale",
+          "isArray": false,
+          "type": {
+            "nonModel": "Sales"
+          },
+          "isRequired": false,
+          "arguments": {
+            "ID": {
+              "name": "ID",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "customer_code": {
+              "name": "customer_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "product_code": {
+              "name": "product_code",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "product_name": {
+              "name": "product_name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "quantity": {
+              "name": "quantity",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "unit_price": {
+              "name": "unit_price",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "total_amount": {
+              "name": "total_amount",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false
+            },
+            "order_status": {
+              "name": "order_status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "payment_status": {
+              "name": "payment_status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "sales_year": {
+              "name": "sales_year",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "sales_month": {
+              "name": "sales_month",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "sales_week": {
+              "name": "sales_week",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "created_at": {
+              "name": "created_at",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false
+            },
+            "updated_at": {
+              "name": "updated_at",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false
+            }
+          }
+        },
+        "deleteSale": {
+          "name": "deleteSale",
           "isArray": false,
           "type": "Boolean",
           "isRequired": false,

@@ -1,5 +1,19 @@
 
 
-GET https://8q5zg2p8tj.us-east-1.awsapprunner.com/odata/v4/order/OrderData?$filter=created_at%20ge%202025-09-11T00:00:00Z%20and%20created_at%20lt%202025-09-12T00:00:00Z
+POST https://8q5zg2p8tj.us-east-1.awsapprunner.com/odata/v4/order/Sales
 Headers:
   Content-Type: application/json
+body:
+{
+  "sales_year": 2023,
+  "sales_month": 6,
+  "sales_week": 2,
+  "customer_code": "15112009",
+  "product_code": "PROD001",
+  "product_name": "Product 1",
+  "quantity": 10,
+  "unit_price": 1500,
+  "total_amount": 15000,
+  "order_status": "PENDING",
+  "payment_status": "UNPAID"
+}
