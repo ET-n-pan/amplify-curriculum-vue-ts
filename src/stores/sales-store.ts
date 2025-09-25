@@ -2,6 +2,7 @@
 import { defineStore } from "pinia";
 import type { Schema } from "@/amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { ODataQueryBuilder } from "@/utils/ODataQueryBuilder";
 
 const client = generateClient<Schema>();
 
@@ -162,11 +163,30 @@ export const useSalesStore = defineStore("sales", {
         const result = await client.queries.getSales();
         if (result.data?.data) {
 			console.log("Fetched sales data:", result.data);
-          this.allSales = result.data.data as Sale[];
-          this.filteredSales = [...this.allSales];
-		  this.count = result.data.count;
-          this.lastSyncTime = new Date();
-          this.saveSalesToLocalStorage();
+			this.allSales = result.data.data as Sale[];
+			this.filteredSales = [...this.allSales];
+			this.count = result.data.count;
+			this.lastSyncTime = new Date();
+			this.saveSalesToLocalStorage();
+			
+			while (this.allSales.length < this.count) {
+				const nextResult = await client.queries.getSales(
+					{
+						skip: this.allSales.length
+					}
+				);
+        console.log("Fetched next page of sales data:", nextResult.data);
+				if (nextResult.data?.data) {
+					this.allSales = this.allSales.concat(nextResult.data.data as Sale[]);
+					this.filteredSales = [...this.allSales];
+					this.saveSalesToLocalStorage();
+				} else {
+					break;
+				}
+			}
+			
+			console.log("Total sales after pagination fetch:", this.allSales.length);
+			
           return { success: true, message: "同期に成功しました" };
         } else {
           return { success: false, message: "データ取得に失敗しました" };
@@ -367,7 +387,7 @@ export const useSalesStore = defineStore("sales", {
       
       try {
         // Update local data
-        const index = this.allSales.findIndex(s => s.id === saleId);
+        const index = this.allSales.findIndex(s => s.ID === saleId);
         if (index !== -1) {
           const updatedSale = { ...this.allSales[index], ...saleData, updated_at: new Date().toISOString() };
           this.allSales[index] = updatedSale;

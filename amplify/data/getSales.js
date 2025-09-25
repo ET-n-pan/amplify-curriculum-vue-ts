@@ -43,6 +43,7 @@ export function request(ctx) {
     params: {
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
       query: queryParams,
     },

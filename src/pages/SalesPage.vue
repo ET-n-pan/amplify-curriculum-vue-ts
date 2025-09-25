@@ -212,7 +212,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, nextTick, watch } from "vue";
-import { useSalesStore } from "@/stores/sales-store";
+import { useSalesStore } from "@/stores/sales-store.ts";
 import Chart from 'chart.js/auto';
 import SalesChart from "@/components/base/SalesChart.vue";
 // Store and refs
@@ -234,7 +234,7 @@ const filters = reactive({
 
 const sortConfig = reactive({
   field: '',
-  direction: 'asc' as 'asc' | 'desc'
+  direction: 'desc' as 'asc' | 'desc'
 });
 
 // Chart configuration
