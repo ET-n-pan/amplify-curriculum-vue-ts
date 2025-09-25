@@ -1,8 +1,7 @@
 // stores/form-store.ts
 import { defineStore } from "pinia";
-import type { Schema } from "@/amplify/data/resource";
+import type { Schema } from "../../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { ODataQueryBuilder } from "../utils/oDataQueryBuilder";
 
 const client = generateClient<Schema>();
 
@@ -13,12 +12,12 @@ const productPrices: { [key: string]: number } = {
 	PROD003: 8900,
 };
 
-// 商品名を定義
-const productNames: { [key: string]: string } = {
-	PROD001: "ノートパソコン",
-	PROD002: "マウス",
-	PROD003: "キーボード",
-};
+// // 商品名を定義
+// const productNames: { [key: string]: string } = {
+// 	PROD001: "ノートパソコン",
+// 	PROD002: "マウス",
+// 	PROD003: "キーボード",
+// };
 
 // 商品コードに基づいて単価を設定
 function updateUnitPrice(product_code : string): number {
@@ -174,16 +173,31 @@ export const useFormStore = defineStore("form", {
 		async syncWithServer(): Promise<{ success: boolean; message: string }> {
 			try{
 				this.isLoading = true;
-				const result = await client.queries.getOrder();
+				const result = await client.queries.getOrder({});
 				console.log("Sync result:", result);
-				if (result.count) {
-					this.count = result.count;
+				if (result.data?.count) {
+					this.count = result.data.count;
 				}
 				if (result.data?.data) {
-					this.allOrders = result.data.data;
+					this.allOrders = result.data.data as Array<Schema['Order']["type"]>;
 					this.filteredOrders = [...this.allOrders];
 					this.lastSyncTime = new Date();
 					this.saveOrdersToLocalStorage();
+
+					while (this.allOrders.length < this.count) {
+						const nextResult = await client.queries.getOrder({
+							skip: this.allOrders.length
+						});
+						if (nextResult.data?.data) {
+							this.allOrders = this.allOrders.concat(nextResult.data.data as Array<Schema['Order']["type"]>);
+							this.filteredOrders = [...this.allOrders];
+							this.saveOrdersToLocalStorage();
+						} else {
+							break;
+						}
+
+					}
+
 					return { success: true, message: "同期に成功しました" };
 				} else {
 					return { success: false, message: "データ取得に失敗しました" };
@@ -227,9 +241,9 @@ export const useFormStore = defineStore("form", {
 			// ソート
 			if (sort.field) {
 				result.sort((a, b) => {
-					const aVal = a[sort.field];
-					const bVal = b[sort.field];
-					
+					const aVal = (a as any)[sort.field];
+					const bVal = (b as any)[sort.field];
+
 					const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
 					return sort.direction === 'asc' ? comparison : -comparison;
 				});
@@ -297,7 +311,7 @@ export const useFormStore = defineStore("form", {
 			};
 			try {
 				//localデータ更新
-				const index = this.allOrders.findIndex((o: { ID: any; }) => o.ID === orderId);
+				const index = this.allOrders.findIndex((o) => o.ID === orderId);
 				if (index !== -1) {
 					this.allOrders[index] = updatedOrder;
 					this.filteredOrders = [...this.allOrders];
@@ -367,11 +381,11 @@ export const useFormStore = defineStore("form", {
 			}
 			try {
 				// ローカルデータから削除
-				this.allOrders = this.allOrders.filter((order: { ID: string; }) => 
-					!selectedOrderIds.includes(order.ID as string)
+				this.allOrders = this.allOrders.filter((order) => 
+					order.ID && !selectedOrderIds.includes(order.ID)
 				);
-				this.filteredOrders = this.filteredOrders.filter((order: { ID: string; }) => 
-					!selectedOrderIds.includes(order.ID as string)
+				this.filteredOrders = this.filteredOrders.filter((order) => 
+					order.ID && !selectedOrderIds.includes(order.ID)
 				);
 
 				this.saveOrdersToLocalStorage();

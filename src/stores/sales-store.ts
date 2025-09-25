@@ -1,8 +1,8 @@
 // stores/sales-store.ts
 import { defineStore } from "pinia";
-import type { Schema } from "@/amplify/data/resource";
+import type { Schema } from "../../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { ODataQueryBuilder } from "@/utils/ODataQueryBuilder";
+
 
 const client = generateClient<Schema>();
 
@@ -49,11 +49,11 @@ export const useSalesStore = defineStore("sales", {
     customer_code: "15112009",
     product_code: "PROD001",
     quantity: "1",
-	unit_price: productPrices["PROD001"].toString(),
+	  unit_price: productPrices["PROD001"].toString(),
     order_status: "pending",
     payment_status: "unpaid",
 
-	count: 0,
+	  count: 0,
     // Sales data
     allSales: [] as Sale[],
     filteredSales: [] as Sale[],
@@ -154,26 +154,28 @@ export const useSalesStore = defineStore("sales", {
       }
 
       this.page = 1;
+      this.rowsPerPage = 10;
+      this.count = this.allSales.length;
     },
 
     // Sync with server
     async syncWithServer(): Promise<{ success: boolean; message: string }> {
       try {
         this.isLoading = true;
-        const result = await client.queries.getSales();
+        const result = await client.queries.getSales({});
         if (result.data?.data) {
-			console.log("Fetched sales data:", result.data);
-			this.allSales = result.data.data as Sale[];
-			this.filteredSales = [...this.allSales];
-			this.count = result.data.count;
-			this.lastSyncTime = new Date();
-			this.saveSalesToLocalStorage();
-			
-			while (this.allSales.length < this.count) {
-				const nextResult = await client.queries.getSales(
-					{
-						skip: this.allSales.length
-					}
+          console.log("Fetched sales data:", result.data);
+          this.allSales = result.data.data as Sale[];
+          this.filteredSales = [...this.allSales];
+          this.count = result.data.count ?? 0;
+          this.lastSyncTime = new Date();
+          this.saveSalesToLocalStorage();
+          
+          while (this.allSales.length < this.count) {
+            const nextResult = await client.queries.getSales(
+              {
+                skip: this.allSales.length
+              }
 				);
         console.log("Fetched next page of sales data:", nextResult.data);
 				if (nextResult.data?.data) {
@@ -244,6 +246,10 @@ export const useSalesStore = defineStore("sales", {
         result.sort((a, b) => {
           const aVal = a[sort.field as keyof Sale];
           const bVal = b[sort.field as keyof Sale];
+          
+          if (aVal === undefined && bVal === undefined) return 0;
+          if (aVal === undefined) return 1;
+          if (bVal === undefined) return -1;
           
           const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
           return sort.direction === 'asc' ? comparison : -comparison;
@@ -379,33 +385,33 @@ export const useSalesStore = defineStore("sales", {
       }
     },
 
-    // Update sale
-    async updateSale(saleId: string, saleData: Partial<Sale>): Promise<{ success: boolean; message: string }> {
-      if (!saleId) {
-        return { success: false, message: "無効な売上IDです" };
-      }
+    // // Update sale
+    // async updateSale(saleId: string, saleData: Partial<Sale>): Promise<{ success: boolean; message: string }> {
+    //   if (!saleId) {
+    //     return { success: false, message: "無効な売上IDです" };
+    //   }
       
-      try {
-        // Update local data
-        const index = this.allSales.findIndex(s => s.ID === saleId);
-        if (index !== -1) {
-          const updatedSale = { ...this.allSales[index], ...saleData, updated_at: new Date().toISOString() };
-          this.allSales[index] = updatedSale;
-          this.filteredSales = [...this.allSales];
-          this.saveSalesToLocalStorage();
+    //   try {
+    //     // Update local data
+    //     const index = this.allSales.findIndex(s => s.ID === saleId);
+    //     if (index !== -1) {
+    //       const updatedSale = { ...this.allSales[index], ...saleData, updated_at: new Date().toISOString() };
+    //       this.allSales[index] = updatedSale;
+    //       this.filteredSales = [...this.allSales];
+    //       this.saveSalesToLocalStorage();
           
-          // Update DB
-          const result = await client.mutations.updateSale(updatedSale);
-          if (result.data) {
-            return { success: true, message: "売上データが更新されました" };
-          }
-        }
+    //       // Update DB
+    //       const result = await client.mutations.updateSale(updatedSale);
+    //       if (result.data) {
+    //         return { success: true, message: "売上データが更新されました" };
+    //       }
+    //     }
         
-        return { success: false, message: "売上データが見つかりません" };
-      } catch (error) {
-        console.error("Update sale error:", error);
-        return { success: false, message: "更新中にエラーが発生しました" };
-      }
-    },
+    //     return { success: false, message: "売上データが見つかりません" };
+    //   } catch (error) {
+    //     console.error("Update sale error:", error);
+    //     return { success: false, message: "更新中にエラーが発生しました" };
+    //   }
+    // },
   }
 });

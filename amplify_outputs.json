@@ -470,7 +470,45 @@
           "type": {
             "nonModel": "salesResponse"
           },
-          "isRequired": false
+          "isRequired": false,
+          "arguments": {
+            "orderby": {
+              "name": "orderby",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "filter": {
+              "name": "filter",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "top": {
+              "name": "top",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "skip": {
+              "name": "skip",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
+            },
+            "select": {
+              "name": "select",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "search": {
+              "name": "search",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
         }
       },
       "mutations": {

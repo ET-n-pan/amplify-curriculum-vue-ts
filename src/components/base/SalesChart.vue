@@ -10,7 +10,6 @@
           <ui5-option value="line">折れ線グラフ</ui5-option>
           <ui5-option value="pie">円グラフ</ui5-option>
           <ui5-option value="doughnut">ドーナツグラフ</ui5-option>
-          <ui5-option value="area">エリアグラフ</ui5-option>
           <ui5-option value="radar">レーダーチャート</ui5-option>
         </ui5-select>
       </ui5-form-item>
@@ -48,7 +47,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, reactive, nextTick } from 'vue';
-import Chart from 'chart.js/auto';
+import { Chart, type ChartConfiguration, type ChartDataset } from 'chart.js/auto';
 
 // Propsを使って親コンポーネントからデータと設定を受け取る
 const props = defineProps<{
@@ -134,11 +133,13 @@ watch(() => props.data, () => {
   updateChart();
 }, { deep: true });
 
+type Mixed = 'bar' | 'line' | 'pie' | 'doughnut' | 'radar';
+
 // チャートの初期化
 const initChart = () => {
   const ctx = document.getElementById(props.chartId || 'salesChart') as HTMLCanvasElement;
   if (ctx) {
-    chartInstance = new Chart(ctx, {
+    chartInstance = new Chart<Mixed>(ctx, {
       type: 'bar',
       data: { labels: [], datasets: [] },
       options: {
@@ -183,14 +184,7 @@ const updateChart = async () => {
   chartInstance.data = chartData;
   
   // Handle chart type change
-  if (localConfig.type === 'area') {
-    chartInstance.config.type = 'line';
-    chartInstance.data.datasets.forEach(dataset => {
-      dataset.fill = true;
-    });
-  } else {
-    chartInstance.config.type = localConfig.type as any;
-  }
+  (chartInstance.config as ChartConfiguration<any>).type = localConfig.type as any;
 
   // 特殊な処理が必要なチャートタイプ
   if (['pie', 'doughnut', 'radar'].includes(localConfig.type)) {
