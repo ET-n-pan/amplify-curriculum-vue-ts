@@ -130,6 +130,14 @@ const schema = a.schema({
   
   getSales: a
     .query()
+    .arguments({
+      orderby: a.string(),
+        filter: a.string(),
+        top: a.integer(),
+        skip: a.integer(),
+        select: a.string(),
+        search: a.string(),
+    })
     .returns(a.ref("salesResponse"))
     .authorization(allow => [allow.publicApiKey()])
     .handler(

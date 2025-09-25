@@ -212,7 +212,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, nextTick, watch } from "vue";
-import { useSalesStore } from "@/stores/sales-store.ts";
+import { useSalesStore } from "@/stores/sales-store";
 import Chart from 'chart.js/auto';
 import SalesChart from "@/components/base/SalesChart.vue";
 // Store and refs
@@ -267,183 +267,8 @@ const getPaymentLabel = (status: string) => {
 // Initialize
 onMounted(async () => {
   await salesStore.initialize();
-  initChart();
-  updateChart();
 });
 
-// Watch for data changes
-watch(() => salesStore.filteredSales, () => {
-  updateChart();
-}, { deep: true });
-
-// Chart functions
-const initChart = () => {
-  const ctx = document.getElementById('salesChart') as HTMLCanvasElement;
-  if (ctx) {
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: { labels: [], datasets: [] },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'top' },
-          title: { display: true, text: '売上分析' }
-        }
-      }
-    });
-  }
-};
-
-const updateChart = () => {
-  if (!chartInstance) return;
-
-  const data = prepareChartData();
-  chartInstance.data = data;
-  chartInstance.config.type = chartConfig.type as any;
-  
-  // Special handling for pie/doughnut charts
-  if (chartConfig.type === 'pie' || chartConfig.type === 'doughnut') {
-    chartInstance.options!.scales = {};
-  } else {
-    chartInstance.options!.scales = {
-      y: { beginAtZero: true }
-    };
-  }
-  
-  chartInstance.update();
-};
-
-const prepareChartData = () => {
-  const salesData = salesStore.filteredSales;
-  
-  switch (chartConfig.dataAxis) {
-    case 'monthly':
-      return prepareMonthlyData(salesData);
-    case 'product':
-      return prepareProductData(salesData);
-    case 'customer':
-      return prepareCustomerData(salesData);
-    case 'status':
-      return prepareStatusData(salesData);
-    default:
-      return { labels: [], datasets: [] };
-  }
-};
-
-const prepareMonthlyData = (sales: any[]) => {
-  const monthlyData: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    const key = `${sale.sales_year}/${sale.sales_month}`;
-    if (!monthlyData[key]) monthlyData[key] = 0;
-    
-    if (chartConfig.aggregation === 'sum') {
-      monthlyData[key] += sale.total_amount;
-    } else if (chartConfig.aggregation === 'count') {
-      monthlyData[key] += 1;
-    }
-  });
-
-  return {
-    labels: Object.keys(monthlyData),
-    datasets: [{
-      label: chartConfig.aggregation === 'sum' ? '売上金額' : '件数',
-      data: Object.values(monthlyData),
-      backgroundColor: 'rgba(54, 162, 235, 0.5)',
-      borderColor: 'rgba(54, 162, 235, 1)',
-      borderWidth: 1
-    }]
-  };
-};
-
-const prepareProductData = (sales: any[]) => {
-  const productData: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    const key = sale.product_name || sale.product_code;
-    if (!productData[key]) productData[key] = 0;
-    
-    if (chartConfig.aggregation === 'sum') {
-      productData[key] += sale.total_amount;
-    } else if (chartConfig.aggregation === 'count') {
-      productData[key] += 1;
-    }
-  });
-
-  return {
-    labels: Object.keys(productData),
-    datasets: [{
-      label: chartConfig.aggregation === 'sum' ? '売上金額' : '件数',
-      data: Object.values(productData),
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(54, 162, 235, 0.5)',
-        'rgba(255, 206, 86, 0.5)'
-      ],
-      borderColor: [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)'
-      ],
-      borderWidth: 1
-    }]
-  };
-};
-
-const prepareCustomerData = (sales: any[]) => {
-  const customerData: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    if (!customerData[sale.customer_code]) customerData[sale.customer_code] = 0;
-    
-    if (chartConfig.aggregation === 'sum') {
-      customerData[sale.customer_code] += sale.total_amount;
-    } else if (chartConfig.aggregation === 'count') {
-      customerData[sale.customer_code] += 1;
-    }
-  });
-
-  return {
-    labels: Object.keys(customerData),
-    datasets: [{
-      label: chartConfig.aggregation === 'sum' ? '売上金額' : '件数',
-      data: Object.values(customerData),
-      backgroundColor: 'rgba(75, 192, 192, 0.5)',
-      borderColor: 'rgba(75, 192, 192, 1)',
-      borderWidth: 1
-    }]
-  };
-};
-
-const prepareStatusData = (sales: any[]) => {
-  const statusData: Record<string, number> = {};
-  
-  sales.forEach(sale => {
-    const key = getStatusLabel(sale.order_status);
-    if (!statusData[key]) statusData[key] = 0;
-    
-    if (chartConfig.aggregation === 'sum') {
-      statusData[key] += sale.total_amount;
-    } else if (chartConfig.aggregation === 'count') {
-      statusData[key] += 1;
-    }
-  });
-
-  return {
-    labels: Object.keys(statusData),
-    datasets: [{
-      label: chartConfig.aggregation === 'sum' ? '売上金額' : '件数',
-      data: Object.values(statusData),
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(54, 162, 235, 0.5)',
-        'rgba(255, 206, 86, 0.5)',
-        'rgba(75, 192, 192, 0.5)'
-      ]
-    }]
-  };
-};
 
 // Toast function
 const showToast = (msg: string) => {
@@ -457,9 +282,6 @@ const showToast = (msg: string) => {
 const addSale = async () => {
   const result = await salesStore.addSale();
   showToast(result.message);
-  if (result.success) {
-    updateChart();
-  }
 };
 
 const deleteSale = async () => {
@@ -468,9 +290,6 @@ const deleteSale = async () => {
   console.log("Selected Rows for Deletion:", selectedRows);
   const result = await salesStore.deleteSelectedSales(selectedRows);
   showToast(result.message);
-  if (result.success) {
-    updateChart();
-  }
 };
 
 const refreshFromServer = async () => {
@@ -478,7 +297,6 @@ const refreshFromServer = async () => {
   showToast(result.message);
   if (result.success) {
     applyFilters();
-    updateChart();
   }
 };
 
@@ -486,7 +304,6 @@ const refreshFromServer = async () => {
 const applyFilters = async () => {
   await nextTick();
   salesStore.applyFiltersAndSort(filters, sortConfig);
-  updateChart();
 };
 
 const clearFilters = () => {
