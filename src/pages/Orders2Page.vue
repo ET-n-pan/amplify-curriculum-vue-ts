@@ -170,39 +170,47 @@
     </ui5-panel>
     <!-- エラーメッセージ表示用トースト -->
     <ui5-toast id="message" ref="messageRef"></ui5-toast>
+    
 	<!-- オーダー一覧テーブル -->
-    <ui5-table accessible-name-ref="title" id="table" style="max-width: 1500px;">
-		<!-- 選択機能の追加 -->
-      	<ui5-table-selection id="selection" slot="features" ref="selectionRef"></ui5-table-selection>
-        <ui5-table-header-row slot="headerRow" sticky>
-          	<ui5-table-header-cell>注文ID</ui5-table-header-cell>
-          	<ui5-table-header-cell>顧客コード</ui5-table-header-cell>
-          	<ui5-table-header-cell>商品コード</ui5-table-header-cell>
-          	<ui5-table-header-cell>数量</ui5-table-header-cell>
-          	<ui5-table-header-cell>納期</ui5-table-header-cell>
-          	<ui5-table-header-cell>注文日</ui5-table-header-cell>
-        </ui5-table-header-row>
-        <ui5-illustrated-message slot="noData" name="NoData"></ui5-illustrated-message>
+    <div class="vl-parent" style="max-width: 1500px;">
+        <loading :active="formStore.isLoading" :is-full-page="false"></loading>
+    
+        <ui5-table accessible-name-ref="title" id="table" style="max-width: 1500px;">
+            
+            <!-- 選択機能の追加 -->
+            <ui5-table-selection id="selection" slot="features" ref="selectionRef"></ui5-table-selection>
+            <ui5-table-header-row slot="headerRow" sticky>
+                <ui5-table-header-cell>注文ID</ui5-table-header-cell>
+                <ui5-table-header-cell>顧客コード</ui5-table-header-cell>
+                <ui5-table-header-cell>商品コード</ui5-table-header-cell>
+                <ui5-table-header-cell>数量</ui5-table-header-cell>
+                <ui5-table-header-cell>納期</ui5-table-header-cell>
+                <ui5-table-header-cell>注文日</ui5-table-header-cell>
+            </ui5-table-header-row>
+            <ui5-illustrated-message slot="noData" name="NoData"></ui5-illustrated-message>
 
-		<!-- オーダー一覧 -->
-		<ui5-table-row v-for="order in formStore.paginatedOrders" :row-key="order.ID" :key="order.ID">
-			<ui5-table-cell><ui5-label>{{ order.ID }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.customer_code }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.product_code }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-input  :value="String(order.quantity)" @input="updateOrder(order.ID, {...order, quantity: $event.target.value})"></ui5-input></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.delivery_date }}</ui5-label></ui5-table-cell>
-			<ui5-table-cell><ui5-label>{{ order.created_at }}</ui5-label></ui5-table-cell>
-		</ui5-table-row>
+            <!-- オーダー一覧 -->
+            <ui5-table-row v-for="order in formStore.paginatedOrders" :row-key="order.ID" :key="order.ID">
+                <ui5-table-cell><ui5-label>{{ order.ID }}</ui5-label></ui5-table-cell>
+                <ui5-table-cell><ui5-label>{{ order.customer_code }}</ui5-label></ui5-table-cell>
+                <ui5-table-cell><ui5-label>{{ order.product_code }}</ui5-label></ui5-table-cell>
+                <ui5-table-cell><ui5-input  :value="String(order.quantity)" @input="updateOrder(order.ID, {...order, quantity: $event.target.value})"></ui5-input></ui5-table-cell>
+                <ui5-table-cell><ui5-label>{{ order.delivery_date }}</ui5-label></ui5-table-cell>
+                <ui5-table-cell><ui5-label>{{ order.created_at }}</ui5-label></ui5-table-cell>
+            </ui5-table-row>
 
-    </ui5-table>
-	
+        </ui5-table>
+	</div>
   	</div>
 </template>
 
 <script setup lang="ts">
 import { useFormStore } from "@/stores/form-store";
 import "@/lib/UI5FormComp";
+import { useGlobalStore } from "@/stores/global-store";
 import { ref, onMounted, reactive, nextTick } from "vue";
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css';
 
 // UIレファレンス
 const messageRef = ref<any>(null);
@@ -210,7 +218,7 @@ const selectionRef = ref<any>(null);
 
 // DataStoreクライアントの生成
 const formStore = useFormStore();
-
+const globalStore = useGlobalStore();
 
 // フィルタリングとソートの状態管理
 // reactiveを使用して、オブジェクト内容が変更されたときにリアクティブに反応するようにする
@@ -276,7 +284,9 @@ const showToast = (msg: string) => {
 
 // 注文追加
 const addOrder = async () =>{
+    formStore.isLoading = true;
 	const result = await formStore.addOrder();
+    formStore.isLoading = false;
 	showToast(result.message);
 	if (result.success) {
 		// 追加成功時はフォームクリアと選択解除
@@ -288,18 +298,23 @@ const addOrder = async () =>{
 const deleteOrder = async () => {
     const selectedRows = selectionRef.value?.selected.split(" ") || [];
 	console.log("Selected rows for deletion:", selectedRows);
+    formStore.isLoading = true;
     const result = await formStore.deleteSelectedOrders(selectedRows);
+    formStore.isLoading = false;
     showToast(result.message);
     
     if (result.success) {
         // Clear selection
+        selectionRef.value.selected = "";
 		formStore.reset();
     }
 };
 
 // 注文更新
 const updateOrder = async (orderId: string, updatedOrder: any) => {
+    formStore.isLoading = true;
 	const result = await formStore.updateOrder(orderId, updatedOrder);
+	formStore.isLoading = false;
 	showToast(result.message);
 	return result.success;
 };

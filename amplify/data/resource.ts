@@ -43,8 +43,8 @@ const schema = a.schema({
         select: a.string(),
         search: a.string(),
       })
-      .returns(a.ref("OrderResponse"))
-      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .returns(a.ref("OrderResponse")) // リスポンス型をOrderResponseに変更
+      .authorization(allow => [allow.publicApiKey()]) 
       .handler(
         a.handler.custom({
           dataSource: "OdataDataSource",
