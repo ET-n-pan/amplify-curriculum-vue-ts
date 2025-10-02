@@ -26,7 +26,8 @@ export const handler = async (event: S3Event) => {
       const rows = csvContent.split('\n').filter(row => row.trim());
       const headers = rows[0].split(',').map(h => h.trim());
       const dataRows = rows.slice(1);
-      const totalBatches = Math.ceil(dataRows.length / 10);
+      const batchSize = 50;
+      const totalBatches = Math.ceil(dataRows.length / batchSize);
 
       console.log(`Processing ${key}: ${dataRows.length} orders, ${totalBatches} batches`);
 
@@ -51,7 +52,6 @@ export const handler = async (event: S3Event) => {
       }));
 
       // Send batches to SQS
-      const batchSize = 10;
       for (let i = 0; i < dataRows.length; i += batchSize) {
         const batch = dataRows.slice(i, i + batchSize);
         const batchNumber = Math.floor(i / batchSize) + 1;
