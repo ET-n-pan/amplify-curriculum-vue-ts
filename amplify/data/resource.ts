@@ -31,8 +31,8 @@ const schema = a.schema({
       endTime: a.datetime(),
       errorMessage: a.string()
     })
-    .authorization((allow) => [allow.publicApiKey()]),
-    // 
+    .authorization((allow) => [allow.authenticated()]),
+    //
     getOrder: a
       .query()
       .arguments({
@@ -44,7 +44,7 @@ const schema = a.schema({
         search: a.string(),
       })
       .returns(a.ref("OrderResponse")) // リスポンス型をOrderResponseに変更
-      .authorization(allow => [allow.publicApiKey()]) 
+      .authorization(allow => [allow.authenticated()]) 
       .handler(
         a.handler.custom({
           dataSource: "OdataDataSource",
@@ -66,7 +66,7 @@ const schema = a.schema({
         created_at: a.string()
       })
       .returns(a.ref("Order"))
-      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .authorization(allow => [allow.authenticated()]) // APIキー認証を許可
       .handler(
         a.handler.custom({
           dataSource: "OdataDataSource",
@@ -88,7 +88,7 @@ const schema = a.schema({
         created_at: a.string()
       })
       .returns(a.ref("Order"))
-      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .authorization(allow => [allow.authenticated()]) // APIキー認証を許可
       .handler(
         a.handler.custom({
           dataSource: "OdataDataSource",
@@ -102,7 +102,7 @@ const schema = a.schema({
         ID: a.string().required(),
       })
       .returns(a.boolean())
-      .authorization(allow => [allow.publicApiKey()]) // APIキー認証を許可
+      .authorization(allow => [allow.authenticated()])
       .handler(
         a.handler.custom({
           dataSource: "OdataDataSource",
@@ -139,7 +139,7 @@ const schema = a.schema({
         search: a.string(),
     })
     .returns(a.ref("salesResponse"))
-    .authorization(allow => [allow.publicApiKey()])
+    .authorization(allow => [allow.authenticated()])
     .handler(
       a.handler.custom({
         dataSource: "OdataDataSource",
@@ -166,7 +166,7 @@ const schema = a.schema({
         updated_at: a.datetime(),
     })
     .returns(a.ref("Sales"))
-    .authorization(allow => [allow.publicApiKey()])
+    .authorization(allow => [allow.authenticated()])
     .handler(
       a.handler.custom({
         dataSource: "OdataDataSource",
@@ -178,7 +178,7 @@ const schema = a.schema({
     .mutation()
     .arguments({ ID: a.string().required() })
     .returns(a.boolean())
-    .authorization(allow => [allow.publicApiKey()])
+    .authorization(allow => [allow.authenticated()])
     .handler(
       a.handler.custom({
         dataSource: "OdataDataSource",
@@ -196,6 +196,6 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'apiKey',
+    defaultAuthorizationMode: 'userPool',
   },
 });

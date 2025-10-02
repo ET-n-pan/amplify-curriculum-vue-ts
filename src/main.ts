@@ -11,6 +11,11 @@ import outputs from "../amplify_outputs.json";
 
 // Amplify設定: AWSサービスとの接続情報を設定
 const amplifyConfig = parseAmplifyConfig(outputs);
+
+amplifyConfig.graphql_headers = async () => {
+  const currentSession = await Auth.currentSession(); return { Authorization: currentSession.getIdToken().getJwtToken() };
+}
+
 // Amplify.configure({
 //   Auth: amplifyConfig.Auth, // Cognito認証設定のみ適用
 //   Storage: amplifyConfig.Storage, // S3ストレージ設定を追加
