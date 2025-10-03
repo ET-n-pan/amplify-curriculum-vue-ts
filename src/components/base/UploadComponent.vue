@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, computed } from 'vue';
+import { ref, onUnmounted, computed, onMounted } from 'vue';
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/data';
 import '@ui5/webcomponents/dist/Card.js';
@@ -93,6 +93,7 @@ import '@ui5/webcomponents/dist/Label.js';
 import '@ui5/webcomponents/dist/MessageStrip.js';
 import '@ui5/webcomponents/dist/List.js';
 import "@ui5/webcomponents-icons/dist/AllIcons.js";
+import { on } from 'events';
 
 const client = generateClient();
 const uploadedFiles = ref([]);
@@ -100,6 +101,15 @@ const globalStatus = ref('');
 const messageDesign = ref('Information');
 const subscriptions = new Map();
 const pollingIntervals = new Map();
+
+onMounted(() => {
+    let uploadCollection = document.querySelector("ui5-upload-collection");
+    uploadCollection.addEventListener("ui5-item-delete", e => {
+        console.log("uploadCollection:", uploadCollection);
+        uploadCollection.removeChild(e.detail.item);
+    });
+
+});
 
 const handleDrop = (event) => {
   event.preventDefault();
